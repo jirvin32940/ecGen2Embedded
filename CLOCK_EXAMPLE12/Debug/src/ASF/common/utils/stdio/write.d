@@ -1,5 +1,5 @@
-src/clock_example1_sam.d src/clock_example1_sam.o: \
- ../src/clock_example1_sam.c ../src/asf.h ../src/ASF/sam/utils/compiler.h \
+src/ASF/common/utils/stdio/write.d src/ASF/common/utils/stdio/write.o: \
+ ../src/ASF/common/utils/stdio/write.c ../src/ASF/sam/utils/compiler.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\lib\gcc\arm-none-eabi\4.9.3\include\stddef.h \
  ../src/ASF/common/utils/parts.h \
  ../src/ASF/sam/utils/preprocessor/preprocessor.h \
@@ -131,26 +131,7 @@ src/clock_example1_sam.d src/clock_example1_sam.o: \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\machine\stdlib.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\alloca.h \
  ../src/ASF/common/utils/interrupt.h \
- ../src/ASF/common/utils/interrupt/interrupt_sam_nvic.h \
- ../src/ASF/sam/utils/status_codes.h \
- ../src/ASF/common/services/gpio/gpio.h \
- ../src/ASF/common/services/gpio/sam_gpio/sam_gpio.h \
- ../src/ASF/sam/drivers/pio/pio.h ../src/ASF/common/boards/board.h \
- ../src/ASF/sam/boards/same70_xplained/same70_xplained.h \
- ../src/ASF/common/services/ioport/ioport.h \
- ../src/ASF/common/services/ioport/sam/ioport_pio.h \
- ../src/ASF/common/services/clock/sysclk.h ../src/config/conf_clock.h \
- ../src/ASF/common/services/clock/same70/sysclk.h \
- ../src/ASF/common/services/clock/osc.h \
- ../src/ASF/common/services/clock/same70/osc.h \
- ../src/ASF/sam/drivers/pmc/pmc.h ../src/ASF/common/services/clock/pll.h \
- ../src/ASF/common/services/clock/same70/pll.h \
- ../src/ASF/sam/drivers/mpu/mpu.h ../src/ASF/sam/drivers/pmc/sleep.h \
- ../src/ASF/sam/utils/fpu/fpu.h \
- ../src/ASF/sam/boards/same70_xplained/led.h \
- ../src/ASF/sam/drivers/pio/pio_handler.h
-
-../src/asf.h:
+ ../src/ASF/common/utils/interrupt/interrupt_sam_nvic.h
 
 ../src/ASF/sam/utils/compiler.h:
 
@@ -417,45 +398,3 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-no
 ../src/ASF/common/utils/interrupt.h:
 
 ../src/ASF/common/utils/interrupt/interrupt_sam_nvic.h:
-
-../src/ASF/sam/utils/status_codes.h:
-
-../src/ASF/common/services/gpio/gpio.h:
-
-../src/ASF/common/services/gpio/sam_gpio/sam_gpio.h:
-
-../src/ASF/sam/drivers/pio/pio.h:
-
-../src/ASF/common/boards/board.h:
-
-../src/ASF/sam/boards/same70_xplained/same70_xplained.h:
-
-../src/ASF/common/services/ioport/ioport.h:
-
-../src/ASF/common/services/ioport/sam/ioport_pio.h:
-
-../src/ASF/common/services/clock/sysclk.h:
-
-../src/config/conf_clock.h:
-
-../src/ASF/common/services/clock/same70/sysclk.h:
-
-../src/ASF/common/services/clock/osc.h:
-
-../src/ASF/common/services/clock/same70/osc.h:
-
-../src/ASF/sam/drivers/pmc/pmc.h:
-
-../src/ASF/common/services/clock/pll.h:
-
-../src/ASF/common/services/clock/same70/pll.h:
-
-../src/ASF/sam/drivers/mpu/mpu.h:
-
-../src/ASF/sam/drivers/pmc/sleep.h:
-
-../src/ASF/sam/utils/fpu/fpu.h:
-
-../src/ASF/sam/boards/same70_xplained/led.h:
-
-../src/ASF/sam/drivers/pio/pio_handler.h:

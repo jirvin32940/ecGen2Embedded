@@ -93,7 +93,7 @@
 #endif
 
 /* Global ul_ms_ticks in milliseconds since start of application */
-volatile uint32_t ul_ms_ticks = 0;
+//jsi 6feb16 defining this in another file now volatile uint32_t ul_ms_ticks = 0;
 
 /**
  * \brief Wait for the given number of milliseconds (using the ul_ms_ticks generated
@@ -101,6 +101,7 @@ volatile uint32_t ul_ms_ticks = 0;
  *
  * \param ul_dly_ticks  Delay to wait for, in milliseconds.
  */
+#if 0 //jsi 6feb16
 static void mdelay(uint32_t ul_dly_ticks)
 {
 	uint32_t ul_cur_ticks;
@@ -109,98 +110,18 @@ static void mdelay(uint32_t ul_dly_ticks)
 	while ((ul_ms_ticks - ul_cur_ticks) < ul_dly_ticks) {
 	}
 }
+#endif
 
 /**
  * \brief Handler for System Tick interrupt.
  *
  * Process System Tick Event and increments the ul_ms_ticks counter.
  */
+#if 0 //jsi 6feb16 the rs485 example main is more complicated, we'll use it for now.
 void SysTick_Handler(void)
 {
 	ul_ms_ticks++;
 }
-
-
-/*
- * BELOW: Carry over from EC GEN I code 31jan16 Modified for EC Gen II
- */
-
-/*
- * Commands for LED display: we can only display the strings provided for by the display
- */
-
-unsigned char CMD_READY[7] =	{0x55, 0xAA, 0x91, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_CLEAN[7] =	{0x55, 0xAA, 0x92, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_CLEANING[7] = {0x55, 0xAA, 0x93, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_DIRTY[7] =	{0x55, 0xAA, 0x94, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_ERROR[7] =	{0x55, 0xAA, 0x95, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_SHELF1[7] =	{0x55, 0xAA, 0x96, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_SHELF2[7] =	{0x55, 0xAA, 0x97, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_SHELF3[7] =	{0x55, 0xAA, 0x98, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_SHELF4[7] =	{0x55, 0xAA, 0x99, 0x00, 0x00, 0x00, 0x00};
-unsigned char CMD_CLEAR[7] =	{0x55, 0xAA, 0xCE, 0x00, 0x00, 0x00, 0x00}; //experiment 11apr15
-	
-unsigned char* cmdPtrArray[10] = {
-	&CMD_READY[0],
-	&CMD_CLEAN[0],
-	&CMD_CLEANING[0],
-	&CMD_DIRTY[0],
-	&CMD_ERROR[0],
-	&CMD_SHELF1[0],
-	&CMD_SHELF2[0],
-	&CMD_SHELF3[0],
-	&CMD_SHELF4[0],
-	&CMD_CLEAR[0]
-};
-
-enum {
-	IDX_READY,
-	IDX_CLEAN,
-	IDX_CLEANING,
-	IDX_DIRTY,
-	IDX_ERROR,
-	IDX_SHELF1,
-	IDX_SHELF2,
-	IDX_SHELF3,
-	IDX_SHELF4,
-	IDX_CLEAR
-	
-};
-
-
-volatile U16 adc_current_conversion;
-
-#define ECLAVE_DOOR_LATCH	//TBD different scheme now
-#define ECLAVE_ACTION_PB	//TBD different scheme now
-#define ECLAVE_DEBUG_LED	PIO_PC16_IDX
-#define ECLAVE_PSUPPLY_ONn	PIO_PA2_IDX
-#define ECLAVE_LED_OEn		PIO_PA1_IDX
-#define ECLAVE_MFP			PIO_PA0_IDX	//set to 1 for 1X, set to 0 for 4X
-
-//TBD different scheme now #define EC_DOOR_LATCHED (!gpio_get_pin_value(ECLAVE_DOOR_LATCH)) //12apr15 this is the correct sense for the equipment going to the show
-//TBD different scheme now #define EC_ACTION_PB	(!gpio_get_pin_value(ECLAVE_ACTION_PB)) //12apr15 this is the correct sense for the equipment going to the show
-
-
-enum {
-	SHELF_INACTIVE,
-	SHELF_ACTIVE
-};
-
-
-void display_text(unsigned char idx);
-void display_text(unsigned char idx)
-{
-	for (int i = 0; i<7; i++)
-	{
-		usart_putchar(DISPLAY_USART, ((unsigned char) ((*(cmdPtrArray[idx]+i)))));
-	}
-	
-}
-
-
-/*
- * ABOVE: Carry over from EC GEN I code 31jan16 Modified for EC Gen II
- */
 
 
 /**
@@ -208,6 +129,7 @@ void display_text(unsigned char idx)
  *
  * \return Unused (ANSI-C compatibility).
  */
+
 int main(void)
 {
 	sysclk_init();
@@ -225,3 +147,4 @@ int main(void)
 	}
 }
 
+#endif //jsi 6feb16 

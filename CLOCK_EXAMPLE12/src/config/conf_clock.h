@@ -54,9 +54,9 @@
 //#define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_MAINCK_4M_RC
 //#define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_MAINCK_8M_RC
 //#define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_MAINCK_12M_RC
-#define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_MAINCK_XTAL //jsi debug 28jan16 
+//jsi 4feb16 #define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_MAINCK_XTAL
 //#define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_MAINCK_BYPASS
-//jsi debug 28jan16 #define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_PLLACK
+#define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_PLLACK //4feb16
 //#define CONFIG_SYSCLK_SOURCE        SYSCLK_SRC_UPLLCK
 
 // ===== Processor Clock (HCLK) Prescaler Options   (Fhclk = Fsys / (SYSCLK_PRES))
@@ -70,13 +70,13 @@
 //#define CONFIG_SYSCLK_PRES          SYSCLK_PRES_3
 
 // ===== System Clock (MCK) Division Options     (Fmck = Fhclk / (SYSCLK_DIV))
-#define CONFIG_SYSCLK_DIV            2
+#define CONFIG_SYSCLK_DIV            1 //jsi 3feb16 was 2
 
 // ===== PLL0 (A) Options   (Fpll = (Fclk * PLL_mul) / PLL_div)
 // Use mul and div effective values here.
 #define CONFIG_PLL0_SOURCE          PLL_SRC_MAINCK_XTAL
 #define CONFIG_PLL0_MUL             25
-#define CONFIG_PLL0_DIV             1
+#define CONFIG_PLL0_DIV             4 //jsi 3feb16 this was 1, but we want the master clock to be 100MHz based on the 16MHz main clock
 
 // ===== UPLL (UTMI) Hardware fixed at 480 MHz.
 

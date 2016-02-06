@@ -47,6 +47,13 @@
 #ifndef CONF_BOARD_H_INCLUDED
 #define CONF_BOARD_H_INCLUDED
 
-/* Intentionally empty */
+/** Enable Com Port. */
+#define CONF_BOARD_UART_CONSOLE
+
+/* USART0 module is used in SYNC. mode. */
+#define CONF_BOARD_USART_RXD
+#define CONF_BOARD_USART_TXD
+#define CONF_BOARD_USART_RTS
+//#define CONF_BOARD_USART_CTS
 
 #endif /* CONF_BOARD_H_INCLUDED */

@@ -92,8 +92,8 @@
 
 /*----------------------------------------------------------------------------*/
 
-#define CONSOLE_UART               USART1
-#define CONSOLE_UART_ID            ID_USART1
+#define CONSOLE_UART               UART0	//jsi 6feb16 was USART1
+#define CONSOLE_UART_ID            ID_UART0 //jsi 6feb16 was ID_USART1
 /** USART1 pins definitions, PA21,PB4. */
 #define USART1_RXD_GPIO   PIO_PA21_IDX
 #define USART1_RXD_FLAGS  IOPORT_MODE_MUX_A
@@ -120,8 +120,7 @@
 
 //! \name LED definitions
 //@{
-//jsi debug 28jan16 changing this for our hardware #define LED0_GPIO            (PIO_PC8_IDX)
-#define LED0_GPIO            (PIO_PC16_IDX) //jsi debug 28jan16 changing this for our hardware #define LED0_GPIO
+#define LED0_GPIO            (PIO_PC16_IDX) //jsi 6feb16 was PC8
 #define LED0_FLAGS           (0)
 #define LED0_ACTIVE_LEVEL    (IOPORT_PIN_LEVEL_LOW)
 #define LED0_INACTIVE_LEVEL  (IOPORT_PIN_LEVEL_HIGH)

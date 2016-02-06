@@ -3,8 +3,10 @@
  * From EC Gen I project, adapted for EC Gen II 31jan16.
  ******************************************************************************/
 
+#if 0 //jsi 3feb16 doesn't compile, but we don't need it yet
+
 #include "gpio.h"				//TBD 31jan16 what will this wind up being?
-#include "cycle_counter.h"		//TBD 31jan16 what will this wind up being?
+//3feb16 doesn't compile jsi #include "cycle_counter.h"		//TBD 31jan16 what will this wind up being?
 #include "serial_id_ds2411.h"
 
 #define EC_ONE_MICROSECOND 8
@@ -376,3 +378,6 @@ unsigned char crc8_add(unsigned char acc, unsigned char byte)
    }
    return acc;
 }
+
+
+#endif //jsi 3feb16 doesn't compile, but we don't need it yet
