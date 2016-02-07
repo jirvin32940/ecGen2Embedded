@@ -513,7 +513,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 
 	while (1) {
 		ioport_toggle_pin_level(EXAMPLE_LED_GPIO);
-		mdelay(3000);
+		mdelay(7000);
 		
 
 		for (charCount = 0; charCount < 7; charCount++)

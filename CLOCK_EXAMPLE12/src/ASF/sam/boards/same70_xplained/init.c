@@ -360,7 +360,15 @@ void board_init(void)
 	/* Configure UART pins */
 //jsi 6feb16 we don't need rx	ioport_set_pin_peripheral_mode(USART0_RXD_GPIO, USART0_RXD_FLAGS); //jsi 6feb16 was USART1
 //jsi 6feb16 we don't need	MATRIX->CCFG_SYSIO |= CCFG_SYSIO_SYSIO4;
-	ioport_set_pin_peripheral_mode(PIO_PA10A_UTXD0, IOPORT_MODE_MUX_A); //jsi 6feb16 was USART1
+
+
+//jsi 7feb16 following defines are from the DMA-UART example project for the SAM4E
+#define PINS_UART0_PORT		IOPORT_PIOA
+#define PINS_UART0			(PIO_PA9A_URXD0 | PIO_PA10A_UTXD0)
+#define PINS_UART0_FLAGS	IOPORT_MODE_MUX_A
+
+	ioport_set_port_peripheral_mode(PINS_UART0_PORT, PINS_UART0, PINS_UART0_FLAGS); //jsi 6feb16 was USART1
+
 #endif
 
 #ifdef CONF_BOARD_TWIHS0
