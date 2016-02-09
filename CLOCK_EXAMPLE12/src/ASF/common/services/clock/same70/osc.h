@@ -74,7 +74,7 @@ extern "C" {
 
 #if !defined(BOARD_FREQ_MAINCK_XTAL)
 #  warning The board main clock xtal frequency has not been defined.
-#  define BOARD_FREQ_MAINCK_XTAL    (12000000UL)
+#  define BOARD_FREQ_MAINCK_XTAL    (16000000UL) //jsi 8feb16 was 12MHz
 #endif
 
 #if !defined(BOARD_FREQ_MAINCK_BYPASS)

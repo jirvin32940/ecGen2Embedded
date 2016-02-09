@@ -26,6 +26,8 @@ src\ASF\sam\drivers\pmc\sleep.c
 
 src\ASF\sam\drivers\tc\tc.c
 
+src\ASF\sam\drivers\twihs\twihs.c
+
 src\ASF\sam\drivers\uart\uart.c
 
 src\ASF\sam\drivers\usart\usart.c
@@ -35,6 +37,8 @@ src\ASF\sam\utils\cmsis\same70\source\templates\gcc\startup_same70.c
 src\ASF\sam\utils\cmsis\same70\source\templates\system_same70.c
 
 src\ASF\sam\utils\syscalls\gcc\syscalls.c
+
+src\pca9952.c
 
 src\serial_id_ds2411.c
 

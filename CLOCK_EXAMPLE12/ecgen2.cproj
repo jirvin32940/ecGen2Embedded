@@ -360,6 +360,7 @@
       <Value>../src/ASF/sam/utils/cmsis/same70/source/templates</Value>
       <Value>../src/ASF/sam/drivers/pmc</Value>
       <Value>../src/ASF/common/services/gpio</Value>
+      <Value>../src/ASF/sam/drivers/twihs</Value>
       <Value>../src/ASF/sam/utils</Value>
       <Value>../src/ASF/sam/utils/preprocessor</Value>
       <Value>../src/ASF/sam/boards</Value>
@@ -374,8 +375,8 @@
       <Value>../src/ASF/sam/drivers/uart</Value>
       <Value>../src/ASF/sam/utils/cmsis/same70/include/component</Value>
       <Value>../src/ASF/common/utils/stdio/stdio_serial</Value>
-      <Value>../src/ASF/common/services/serial</Value>
       <Value>../src/ASF/sam/drivers/usart/usart_rs485_example/same70q21_same70_xplained</Value>
+      <Value>../src/ASF/common/services/serial</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.OtherFlags>-fdata-sections</armgcc.compiler.optimization.OtherFlags>
@@ -454,6 +455,7 @@
     <Folder Include="src\ASF\sam\drivers\pio\" />
     <Folder Include="src\ASF\sam\drivers\pmc\" />
     <Folder Include="src\ASF\sam\drivers\tc\" />
+    <Folder Include="src\ASF\sam\drivers\twihs\" />
     <Folder Include="src\ASF\sam\drivers\uart\" />
     <Folder Include="src\ASF\sam\drivers\usart\" />
     <Folder Include="src\ASF\sam\drivers\usart\usart_rs485_example\" />
@@ -484,6 +486,7 @@
     <Folder Include="src\ASF\thirdparty\CMSIS\Lib\" />
     <Folder Include="src\ASF\thirdparty\CMSIS\Lib\GCC\" />
     <Folder Include="src\config\" />
+    <Folder Include="src\test" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\ASF\common\boards\board.h">
@@ -601,6 +604,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ASF\sam\drivers\tc\tc.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\sam\drivers\twihs\twihs.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\sam\drivers\twihs\twihs.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ASF\sam\drivers\uart\uart.c">
@@ -1000,6 +1009,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\config\conf_uart_serial.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\pca9952.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\pca9952.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\serial_id_ds2411.c">

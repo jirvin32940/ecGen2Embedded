@@ -63,7 +63,7 @@
 
 #define BOARD_USART                USART0
 
-#define BOARD_USART_BAUDRATE       256000
+#define BOARD_USART_BAUDRATE       115200 //was 256000 jsi 7feb16
 
 #define USART_Handler              USART0_Handler
 

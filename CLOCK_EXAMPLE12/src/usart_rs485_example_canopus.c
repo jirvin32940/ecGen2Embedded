@@ -131,6 +131,7 @@
 #include "conf_board.h"
 #include "conf_clock.h"
 #include "conf_example.h"
+#include "pca9952.h"
 
 /** Size of the receive buffer and transmit buffer. */
 #define BUFFER_SIZE         2000
@@ -211,7 +212,7 @@ volatile uint32_t ul_ms_ticks = 0;
  *
  * \param ul_dly_ticks  Delay to wait for, in milliseconds.
  */
-static void mdelay(uint32_t ul_dly_ticks)
+void mdelay(uint32_t ul_dly_ticks)
 {
 	uint32_t ul_cur_ticks;
 
@@ -307,8 +308,10 @@ static void configure_usart(void)
 	sysclk_enable_peripheral_clock(BOARD_ID_USART);
 
 	/* Configure USART in RS485 mode. */
-	usart_init_rs485(BOARD_USART, &usart_console_settings,
-			sysclk_get_cpu_hz());
+//jsi 7feb16 we want rs232 not rs485 for our application	usart_init_rs485(BOARD_USART, &usart_console_settings,
+//jsi 7feb16 we want rs232 not rs485 for our application			sysclk_get_cpu_hz());
+			
+	usart_init_rs232(BOARD_USART, &usart_console_settings, sysclk_get_cpu_hz());
 
 	/* enable transmitter timeguard, 4 bit period delay. */
 	usart_set_tx_timeguard(BOARD_USART, 4);
@@ -473,8 +476,28 @@ void display_text(unsigned char idx)
 	{
 		//jsi 3feb16 doesn't compile but we don't need it yet usart_putchar(DISPLAY_USART, ((unsigned char) ((*(cmdPtrArray[idx]+i)))));
 	}
-	
 }
+
+static void twi_init(void);
+static void twi_init(void)
+{
+	twihs_options_t opt;
+
+	/* Enable the peripheral clock for TWI */
+	pmc_enable_periph_clk(ID_TWIHS0);
+
+	/* Configure the options of TWI driver */
+	opt.master_clk = sysclk_get_cpu_hz();
+	opt.speed      = TWIHS_CLK; //400KHz
+
+	if (twihs_master_init(ID_TWIHS0, &opt) != TWIHS_SUCCESS) {
+		while (1) {
+			/* Capture error */
+		}
+	}
+}
+
+
 
 
 /*
@@ -494,28 +517,59 @@ void display_text(unsigned char idx)
 
 int main(void) //6feb16 this version of main has been hacked up for only exactly what we need
 {
-	static uint8_t uc_sync = SYNC_CHAR;
-	uint32_t time_elapsed = 0;
-	uint32_t ul_i;
-	uint8_t displayState = 0;
-	uint8_t charCount = 0;
+	char		txBuf[11] = {0,0,0,0,0,0,0,0,0,0,0}, rxByte;
+	uint32_t	i;	
+	uint32_t	time_elapsed = 0;
+	uint32_t	ul_i;
+	uint8_t		displayState = 0;
+	uint8_t		charCount = 0;
 
 	/* Initialize the SAM system. */
 	sysclk_init();
 	board_init();
 
-	/* Configure UART for debug message output. */
+	/* Configure UART for blue scrolling display */
 	configure_console();
+
+	/* Configure USART. */
+	configure_usart();
 
 	/* 1ms tick. */
 	configure_systick();
 
 
-	while (1) {
-		ioport_toggle_pin_level(EXAMPLE_LED_GPIO);
-		mdelay(7000);
-		
+	twi_init();
 
+//make this ecII jsi 7feb16	gpio_set_pin_high(ECLAVE_LED_OEn); //make sure outputs are disabled at the chip level
+
+	PCA9952_init();
+
+	
+	/*
+	 * Enable transmitter here, and disable receiver first, to avoid receiving
+	 * characters sent by itself. It's necessary for half duplex RS485.
+	 */
+	usart_enable_tx(BOARD_USART);
+	usart_enable_rx(BOARD_USART);
+
+	while (1) {
+
+		/* Test the debug LED */
+		ioport_toggle_pin_level(EXAMPLE_LED_GPIO);
+
+
+		/* Test the debug usart rx and tx */
+		for (i=0; i<70; i++) //7 seconds
+		{
+			mdelay(100);
+		
+			if (usart_is_rx_ready(BOARD_USART)) {
+				usart_read(BOARD_USART, (uint32_t *)&rxByte);
+				func_transmit(&rxByte, 1);
+			}
+		}
+
+		/* Test the scrolling blue LED display */
 		for (charCount = 0; charCount < 7; charCount++)
 		{
 			unsigned char temp;
@@ -523,10 +577,47 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 			putchar(temp);
 		}
 		
+		/* Test the debug port */
+
+		switch (displayState)
+		{
+			case IDX_READY:
+				sprintf(txBuf, "Ready\r\n");
+				break;
+			case IDX_CLEAN:
+				sprintf(txBuf, "Clean\r\n");
+				break;
+			case IDX_CLEANING:
+				sprintf(txBuf, "Cleaning\r\n");
+				break;
+			case IDX_DIRTY:
+				sprintf(txBuf, "Dirty\r\n");
+				break;
+			case IDX_ERROR:
+				sprintf(txBuf, "Error\r\n");
+				break;
+			case IDX_SHELF1:
+				sprintf(txBuf, "Shelf1\r\n");
+				break;
+			case IDX_SHELF2:
+				sprintf(txBuf, "Shelf2\r\n");
+				break;
+			case IDX_SHELF3:
+				sprintf(txBuf, "Shelf3\r\n");
+				break;
+			case IDX_SHELF4:
+				sprintf(txBuf, "Shelf4\r\n");
+				break;
+		}
+		
+		func_transmit(txBuf, strlen(txBuf));
+
+
 		if ((++displayState) > 8)
 		{
 			displayState = 0;
 		}
+		
 		
 	}
 }

@@ -47,6 +47,13 @@
 #ifndef CONF_BOARD_H_INCLUDED
 #define CONF_BOARD_H_INCLUDED
 
+/** Definition of TWI interrupt ID on board. */
+#define BOARD_TWIHS_IRQn          TWIHS2_IRQn
+#define BOARD_TWIHS_Handler    TWIHS2_Handler
+
+/** Configure TWI2 pins */
+#define CONF_BOARD_TWIHS0
+
 /** Enable Com Port. */
 #define CONF_BOARD_UART_CONSOLE
 

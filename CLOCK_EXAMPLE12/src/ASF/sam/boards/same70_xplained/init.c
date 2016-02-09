@@ -371,6 +371,7 @@ void board_init(void)
 
 #endif
 
+#define CONF_BOARD_TWIHS0 //jsi 7feb16
 #ifdef CONF_BOARD_TWIHS0
 	ioport_set_pin_peripheral_mode(TWIHS0_DATA_GPIO, TWIHS0_DATA_FLAGS);
 	ioport_set_pin_peripheral_mode(TWIHS0_CLK_GPIO, TWIHS0_CLK_FLAGS);
