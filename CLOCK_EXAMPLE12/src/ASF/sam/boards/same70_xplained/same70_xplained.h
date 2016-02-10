@@ -63,7 +63,7 @@
 /** Board oscillator settings */
 #define BOARD_FREQ_SLCK_XTAL            (32768U)
 #define BOARD_FREQ_SLCK_BYPASS          (32768U)
-#define BOARD_FREQ_MAINCK_XTAL          (12000000U)
+#define BOARD_FREQ_MAINCK_XTAL          (16000000U) //jsi 9feb16 was 12MHz but our board has a 16MHz xtal
 #define BOARD_FREQ_MAINCK_BYPASS        (12000000U)
 
 /** Master clock frequency */

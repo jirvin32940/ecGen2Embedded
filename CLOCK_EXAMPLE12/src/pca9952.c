@@ -86,10 +86,10 @@ void PCA9952_write_reg(unsigned char topBotn, uint8_t reg_index, uint8_t data)
 		twi_package.chip = PCA9952_U8_BOTDRIVE_TWI_ADDRESS;
 	}
 
-	twi_package.addr_length = 0;
 	twi_package.addr[0] = 0;		//is this right? 8feb16
 	twi_package.addr[1] = 0;		//is this right? 8feb16
-	twi_package.addr_length = 2;	//is this right? 8feb16
+	twi_package.addr[2] = 0;		//is this right? 8feb16
+	twi_package.addr_length = 0;
 	twi_package.buffer = &pack;
 	twi_package.length = sizeof(pack);
 
@@ -127,7 +127,7 @@ uint8_t PCA9952_read_reg(unsigned char topBotn, uint8_t reg_index)
 
 	twi_package.addr[0] = 0;		//is this right? 8feb16
 	twi_package.addr[1] = 0;		//is this right? 8feb16
-	twi_package.addr_length = 2;	//is this right? 8feb16
+	twi_package.addr[2] = 0;		//is this right? 8feb16
 	twi_package.addr_length = 0;
 	twi_package.buffer = &reg_index;
 	twi_package.length = 1;

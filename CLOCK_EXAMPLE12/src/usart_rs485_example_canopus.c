@@ -490,7 +490,7 @@ static void twi_init(void)
 	opt.master_clk = sysclk_get_cpu_hz();
 	opt.speed      = TWIHS_CLK; //400KHz
 
-	if (twihs_master_init(ID_TWIHS0, &opt) != TWIHS_SUCCESS) {
+	if (twihs_master_init(TWIHS0, &opt) != TWIHS_SUCCESS) {
 		while (1) {
 			/* Capture error */
 		}
