@@ -52,6 +52,7 @@
 #include "compiler.h"
 #include "gpio.h"
 #include "pca9952.h"
+#include "string.h"
 
 
 #include "twihs.h"
@@ -149,10 +150,13 @@ uint8_t PCA9952_read_reg(unsigned char topBotn, uint8_t reg_index)
 	return data;
 }
 
+extern uint8_t func_transmit(const uint8_t *p_buff, uint32_t ulsize); //lazy, defined in another c file 10feb16 jsi
 
 void PCA9952_init(void) //7apr15
 {
 	volatile uint8_t tmp1, tmp2, tmp3, tmp4;
+	
+	char printStr[64] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	
 	/* Store cpu frequency locally*/
 //7apr15	cpu_hz = fcpu;
@@ -180,7 +184,11 @@ void PCA9952_init(void) //7apr15
 
 	tmp3 = PCA9952_read_reg(LED_BOTTOM, PCA9952_EFLAG0);	//TODO: just see what we get, will need to weave error checking into this system later
 	tmp4 = PCA9952_read_reg(LED_BOTTOM, PCA9952_EFLAG1);
-
+	
+	sprintf(printStr,"PCA9952: tmp1: %x tmp2: %x tmp3: %x tmp4: %x\r\n", tmp1, tmp2, tmp3, tmp4); //10feb16 just for debug jsi
+	func_transmit(printStr, strlen(printStr));
+	
+	
 }
 
 

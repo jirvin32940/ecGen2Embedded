@@ -132,6 +132,7 @@
 #include "conf_clock.h"
 #include "conf_example.h"
 #include "pca9952.h"
+#include "serial_id_ds2411.h"
 
 /** Size of the receive buffer and transmit buffer. */
 #define BUFFER_SIZE         2000
@@ -370,7 +371,7 @@ static void configure_console(void)
 * \param ulsize size of all data.
 *
 */
-static uint8_t func_transmit(const uint8_t *p_buff, uint32_t ulsize)
+uint8_t func_transmit(const uint8_t *p_buff, uint32_t ulsize)
 {
 	Assert(p_buff);
 
@@ -523,6 +524,10 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 	uint32_t	ul_i;
 	uint8_t		displayState = 0;
 	uint8_t		charCount = 0;
+	
+	char		printStr[64];
+	
+	unsigned char idFamily, acc, id[6], idcsum; //10feb16 temp serial ID code, make more formal later
 
 	/* Initialize the SAM system. */
 	sysclk_init();
@@ -537,6 +542,62 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 	/* 1ms tick. */
 	configure_systick();
 
+
+	/*
+	 * Put into some kind of "init_io()" function at some point
+	 */
+	
+	ioport_set_pin_dir(ECLAVE_SERIAL_ID0, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_level(ECLAVE_SERIAL_ID0, IOPORT_PIN_LEVEL_HIGH);
+	ioport_set_pin_dir(ECLAVE_SERIAL_ID1, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_level(ECLAVE_SERIAL_ID1, IOPORT_PIN_LEVEL_HIGH);
+	ioport_set_pin_dir(ECLAVE_SERIAL_ID2, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_level(ECLAVE_SERIAL_ID2, IOPORT_PIN_LEVEL_HIGH);
+	ioport_set_pin_dir(ECLAVE_SERIAL_ID3, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_level(ECLAVE_SERIAL_ID3, IOPORT_PIN_LEVEL_HIGH);
+	ioport_set_pin_dir(ECLAVE_SERIAL_ID4, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_level(ECLAVE_SERIAL_ID4, IOPORT_PIN_LEVEL_HIGH);
+
+	SetSpeed(1); //1==standard speed, not overdrive 
+	
+	for (int i=0; i<5; i++)
+	{
+		if(!OWTouchReset(i)) //we think a board is present, try to read the serial ID
+		{
+			OWWriteByte(i, 0x33); //Read ID command
+			
+			idFamily = OWReadByte(i);
+			
+			acc = crc8_add(0x00, idFamily);
+			
+			for (int j=0; j<6; j++)
+			{
+				id[j] = OWReadByte(i);
+				acc = crc8_add(acc, id[j]);
+			}
+			
+			idcsum = OWReadByte(i);
+			
+			if (acc != idcsum)
+			{
+				func_transmit("Invalid serial ID checksum.\r\n", strlen("Invalid serial ID checksum.\r\n"));
+			}
+			else
+			{
+				sprintf(printStr,"LED board %d serial ID: %x%x%x%x%x%x\r\n", id[0], id[1], id[2], id[3], id[4], id[5]);
+				func_transmit(printStr,strlen(printStr));
+			}
+		}
+		else
+		{
+			func_transmit("no board this slot\r\n", strlen("no board this slot\r\n"));
+			
+		}
+	}
+
+	/*
+	 * End of minimalist serial ID chip stuff
+	 */
 
 	twi_init();
 

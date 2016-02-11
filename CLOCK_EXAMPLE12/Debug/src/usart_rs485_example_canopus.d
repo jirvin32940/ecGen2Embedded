@@ -159,7 +159,8 @@ src/usart_rs485_example_canopus.d src/usart_rs485_example_canopus.o: \
  ../src/ASF/sam/utils/cmsis/same70/include/component/tc.h \
  ../src/ASF/sam/drivers/pio/pio_handler.h ../src/config/conf_board.h \
  ../src/ASF/sam/drivers/usart/usart_rs485_example/same70q21_same70_xplained/conf_example.h \
- ../src/pca9952.h
+ ../src/pca9952.h ../src/serial_id_ds2411.h \
+ ../src/ASF/sam/utils/cmsis/same70/include/same70q21.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\string.h:
 
@@ -496,3 +497,7 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-no
 ../src/ASF/sam/drivers/usart/usart_rs485_example/same70q21_same70_xplained/conf_example.h:
 
 ../src/pca9952.h:
+
+../src/serial_id_ds2411.h:
+
+../src/ASF/sam/utils/cmsis/same70/include/same70q21.h:

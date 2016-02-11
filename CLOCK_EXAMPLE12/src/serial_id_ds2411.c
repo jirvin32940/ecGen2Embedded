@@ -3,11 +3,13 @@
  * From EC Gen I project, adapted for EC Gen II 31jan16.
  ******************************************************************************/
 
-#if 0 //jsi 3feb16 doesn't compile, but we don't need it yet
 
-#include "gpio.h"				//TBD 31jan16 what will this wind up being?
+
+#include "ioport.h"
 //3feb16 doesn't compile jsi #include "cycle_counter.h"		//TBD 31jan16 what will this wind up being?
 #include "serial_id_ds2411.h"
+
+extern void mdelay(uint32_t ul_dly_ticks); //sloppy extern 10feb16 jsi
 
 #define EC_ONE_MICROSECOND 8
 
@@ -45,10 +47,8 @@ void drive_DQ_low(unsigned char idx)
 	
 	ioPin = io_pin(idx);
 	
-	ioFlags = (GPIO_DIR_OUTPUT); //14may15 experiment
-	gpio_configure_pin(ioPin, ioFlags); //14may15 experiment
-
-	gpio_set_pin_low(ioPin);
+	ioport_set_pin_dir(ioPin, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_level(ioPin, IOPORT_PIN_LEVEL_LOW);
 
 }
 
@@ -60,10 +60,8 @@ void release_the_bus(unsigned char idx)
 	
 	ioPin = io_pin(idx);
 	
-//14may15 experiment	gpio_set_pin_high(ioPin);
+	ioport_set_pin_dir(ioPin, IOPORT_DIR_INPUT);
 	
-	ioFlags = (GPIO_DIR_INPUT); //14may15 experiment
-	gpio_configure_pin(ioPin, ioFlags); //14may15 experiment
 
 }
 
@@ -74,8 +72,8 @@ void gpio_input(unsigned char idx) //14may15 experiment
 		
 	ioPin = io_pin(idx);
 		
-	ioFlags = (GPIO_DIR_INPUT);
-	gpio_configure_pin(ioPin, ioFlags);
+	ioport_set_pin_dir(ioPin, IOPORT_DIR_INPUT);
+
 
 }
 
@@ -90,7 +88,7 @@ unsigned char sample_line(unsigned char idx)
 //14may15 experiment		ioFlags = (GPIO_DIR_INPUT);
 //14may15 experiment		gpio_configure_pin(ioPin, ioFlags);
 
-		retVal = gpio_get_pin_value(ioPin);
+		retVal = ioport_get_pin_level(ioPin);
 
 //14may15 experiment		ioFlags = (GPIO_DIR_OUTPUT);
 //14may15 experiment		gpio_configure_pin(ioPin, ioFlags);
@@ -170,20 +168,20 @@ int OWTouchReset(unsigned char idx)
 {
 	int result;
 
-	cpu_delay_us(A, EC_CPU_CLOCK_100MHZ);
+	mdelay(A);
 	drive_DQ_low(idx);
-	cpu_delay_us(H, EC_CPU_CLOCK_100MHZ);	//tRSTL (reset low) 480-640us
+	mdelay(H);	//tRSTL (reset low) 480-640us
 	release_the_bus(idx);
 	
 	gpio_input(idx); //14may15 experiment
 
 	
-	cpu_delay_us(I, EC_CPU_CLOCK_100MHZ);	//tMSP (presence detect sample) 60-75us
+	mdelay(I);	//tMSP (presence detect sample) 60-75us
 	result = sample_line(idx);
 	
-	gpio_input(idx); //14may15 experiement
+	gpio_input(idx); //14may15 experiment
 
-	cpu_delay_us(J, EC_CPU_CLOCK_100MHZ); // Complete the reset sequence recovery 5-??us (no max?)
+	mdelay(J); // Complete the reset sequence recovery 5-??us (no max?)
 	return result; // Return sample presence pulse result
 }
 
@@ -195,16 +193,12 @@ void drive_DQ_low_and_release_the_bus(unsigned char idx)
 	
 	ioPin = io_pin(idx);
 	
-	ioFlagsInput = (GPIO_DIR_INPUT);
-	ioFlagsOutput = (GPIO_DIR_OUTPUT); //14may15 experiment
+	ioport_set_pin_dir(ioPin, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_level(ioPin, IOPORT_PIN_LEVEL_LOW);
 
-	gpio_configure_pin(ioPin, ioFlagsOutput); //14may15 experiment
+	mdelay(A);	//tW1L 5-15us
 
-	gpio_set_pin_low(ioPin);
-	
-	cpu_delay_us(A, EC_CPU_CLOCK_100MHZ);	//tW1L 5-15us
-
-	gpio_configure_pin(ioPin, ioFlagsInput); //14may15 experiment
+	ioport_set_pin_dir(ioPin, IOPORT_DIR_INPUT);
 	
 }
 
@@ -223,15 +217,15 @@ void OWWriteBit(unsigned char idx, int bit)
 //14may15 take this out entirely, we can't seem to control this precisely enough		cpu_delay_us(A, EC_CPU_CLOCK_100MHZ	//tW1L 5-15us
 		release_the_bus(idx);
 #endif
-		cpu_delay_us(B, EC_CPU_CLOCK_100MHZ);	// Complete the time slot and 10us recovery tSLOT 65-??us (no max)
+		mdelay(B);	// Complete the time slot and 10us recovery tSLOT 65-??us (no max)
 	}
 	else
 	{
 		// Write '0' bit
 		drive_DQ_low(idx);
-		cpu_delay_us(C, EC_CPU_CLOCK_100MHZ);	//tW0L 60-120us
+		mdelay(C);	//tW0L 60-120us
 		release_the_bus(idx);
-		cpu_delay_us(D, EC_CPU_CLOCK_100MHZ);	//tREC 5-??us
+		mdelay(D);	//tREC 5-??us
 	}
 }
 
@@ -250,9 +244,9 @@ int OWReadBit(unsigned char idx)
 #endif
 	drive_DQ_low_and_release_the_bus(idx);
 	
-	cpu_delay_us(E, EC_CPU_CLOCK_100MHZ);	//tMSR 5-15us
+	mdelay(E);	//tMSR 5-15us
 	result = sample_line(idx);
-	cpu_delay_us(F, EC_CPU_CLOCK_100MHZ); // Complete the time slot and 10us recovery tREC 5+us
+	mdelay(F); // Complete the time slot and 10us recovery tREC 5+us
 
 	return result;
 }
@@ -380,4 +374,4 @@ unsigned char crc8_add(unsigned char acc, unsigned char byte)
 }
 
 
-#endif //jsi 3feb16 doesn't compile, but we don't need it yet
+
