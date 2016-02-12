@@ -208,7 +208,7 @@ uint32_t g_ulcount = 0;
 volatile uint32_t ul_ms_ticks = 0;
 
 /**
- * \brief Wait for the given number of milliseconds (using the ul_ms_ticks generated
+ * \brief Wait for the given number of microseconds (using the ul_ms_ticks generated
  * by the SAM microcontroller system tick).
  *
  * \param ul_dly_ticks  Delay to wait for, in milliseconds.
@@ -329,13 +329,13 @@ static void configure_usart(void)
 }
 
 /**
- *  Configure system tick to generate an interrupt every 1ms.
+ *  Configure system tick to generate an interrupt every 1us. Note that this was 1ms in the example code. jsi 11feb16
  */
 static void configure_systick(void)
 {
 	uint32_t ul_flag;
 
-	ul_flag = SysTick_Config(sysclk_get_cpu_hz() / SYS_TICK_FREQ);
+	ul_flag = SysTick_Config(sysclk_get_cpu_hz()/SYS_TICK_FREQ);
 	if (ul_flag) {
 		puts("-F- Systick configuration error\r");
 		while (1) {
@@ -584,7 +584,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 			}
 			else
 			{
-				sprintf(printStr,"LED board %d serial ID: %x%x%x%x%x%x\r\n", id[0], id[1], id[2], id[3], id[4], id[5]);
+				sprintf(printStr,"LED board %d serial ID: %x%x%x%x%x%x\r\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
 				func_transmit(printStr,strlen(printStr));
 			}
 		}

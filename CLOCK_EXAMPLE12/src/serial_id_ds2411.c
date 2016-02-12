@@ -8,8 +8,31 @@
 #include "ioport.h"
 //3feb16 doesn't compile jsi #include "cycle_counter.h"		//TBD 31jan16 what will this wind up being?
 #include "serial_id_ds2411.h"
+#include "compiler.h"
 
-extern void mdelay(uint32_t ul_dly_ticks); //sloppy extern 10feb16 jsi
+
+/*
+ * We have a 100MHz clock, so 100 NOPs should be about 1ns. 
+ * Tried to do a 1ns tick but the chip can't seem to handle it.
+ */
+void udelay(uint32_t ul_dly_ticks)
+{
+	for (uint32_t i=0; i<ul_dly_ticks; i++)
+	{
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); 
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+		__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
+	}
+}
+
+
 
 #define EC_ONE_MICROSECOND 8
 
@@ -168,20 +191,20 @@ int OWTouchReset(unsigned char idx)
 {
 	int result;
 
-	mdelay(A);
+	udelay(A);
 	drive_DQ_low(idx);
-	mdelay(H);	//tRSTL (reset low) 480-640us
+	udelay(H);	//tRSTL (reset low) 480-640us
 	release_the_bus(idx);
 	
 	gpio_input(idx); //14may15 experiment
 
 	
-	mdelay(I);	//tMSP (presence detect sample) 60-75us
+	udelay(I);	//tMSP (presence detect sample) 60-75us
 	result = sample_line(idx);
 	
 	gpio_input(idx); //14may15 experiment
 
-	mdelay(J); // Complete the reset sequence recovery 5-??us (no max?)
+	udelay(J); // Complete the reset sequence recovery 5-??us (no max?)
 	return result; // Return sample presence pulse result
 }
 
@@ -196,7 +219,7 @@ void drive_DQ_low_and_release_the_bus(unsigned char idx)
 	ioport_set_pin_dir(ioPin, IOPORT_DIR_OUTPUT);
 	ioport_set_pin_level(ioPin, IOPORT_PIN_LEVEL_LOW);
 
-	mdelay(A);	//tW1L 5-15us
+	udelay(A);	//tW1L 5-15us
 
 	ioport_set_pin_dir(ioPin, IOPORT_DIR_INPUT);
 	
@@ -217,15 +240,15 @@ void OWWriteBit(unsigned char idx, int bit)
 //14may15 take this out entirely, we can't seem to control this precisely enough		cpu_delay_us(A, EC_CPU_CLOCK_100MHZ	//tW1L 5-15us
 		release_the_bus(idx);
 #endif
-		mdelay(B);	// Complete the time slot and 10us recovery tSLOT 65-??us (no max)
+		udelay(B);	// Complete the time slot and 10us recovery tSLOT 65-??us (no max)
 	}
 	else
 	{
 		// Write '0' bit
 		drive_DQ_low(idx);
-		mdelay(C);	//tW0L 60-120us
+		udelay(C);	//tW0L 60-120us
 		release_the_bus(idx);
-		mdelay(D);	//tREC 5-??us
+		udelay(D);	//tREC 5-??us
 	}
 }
 
@@ -244,9 +267,9 @@ int OWReadBit(unsigned char idx)
 #endif
 	drive_DQ_low_and_release_the_bus(idx);
 	
-	mdelay(E);	//tMSR 5-15us
+	udelay(E);	//tMSR 5-15us
 	result = sample_line(idx);
-	mdelay(F); // Complete the time slot and 10us recovery tREC 5+us
+	udelay(F); // Complete the time slot and 10us recovery tREC 5+us
 
 	return result;
 }

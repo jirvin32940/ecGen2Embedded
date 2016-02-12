@@ -103,7 +103,7 @@ void PCA9952_write_reg(unsigned char topBotn, uint8_t reg_index, uint8_t data)
  * Prototype: function defined in main(), sloppy prototype here
  */
 
-extern void mdelay(uint32_t ul_dly_ticks); 
+extern void mdelay(uint32_t ul_dly_ticks);
 
 /*! \brief Read device register content.
  *
