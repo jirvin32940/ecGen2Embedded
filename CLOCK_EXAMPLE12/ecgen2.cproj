@@ -370,6 +370,7 @@
       <Value>../src/ASF/common/services/ioport</Value>
       <Value>../src/ASF/sam/drivers/mpu</Value>
       <Value>../src/ASF/thirdparty/CMSIS/Include</Value>
+      <Value>../src/ASF/sam/drivers/afec</Value>
       <Value>../src/ASF/sam/utils/cmsis/same70/include</Value>
       <Value>../src/ASF/sam/drivers/usart</Value>
       <Value>../src/ASF/sam/drivers/uart</Value>
@@ -377,6 +378,7 @@
       <Value>../src/ASF/common/utils/stdio/stdio_serial</Value>
       <Value>../src/ASF/sam/drivers/usart/usart_rs485_example/same70q21_same70_xplained</Value>
       <Value>../src/ASF/common/services/serial</Value>
+      <Value>../src/ASF/common/services/sleepmgr</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.OtherFlags>-fdata-sections</armgcc.compiler.optimization.OtherFlags>
@@ -443,6 +445,8 @@
     <Folder Include="src\ASF\common\services\ioport\sam\" />
     <Folder Include="src\ASF\common\services\serial\" />
     <Folder Include="src\ASF\common\services\serial\sam_uart\" />
+    <Folder Include="src\ASF\common\services\sleepmgr\" />
+    <Folder Include="src\ASF\common\services\sleepmgr\sam\" />
     <Folder Include="src\ASF\common\utils\" />
     <Folder Include="src\ASF\common\utils\interrupt\" />
     <Folder Include="src\ASF\common\utils\stdio\" />
@@ -451,6 +455,7 @@
     <Folder Include="src\ASF\sam\boards\" />
     <Folder Include="src\ASF\sam\boards\same70_xplained\" />
     <Folder Include="src\ASF\sam\drivers\" />
+    <Folder Include="src\ASF\sam\drivers\afec\" />
     <Folder Include="src\ASF\sam\drivers\mpu\" />
     <Folder Include="src\ASF\sam\drivers\pio\" />
     <Folder Include="src\ASF\sam\drivers\pmc\" />
@@ -540,6 +545,15 @@
     <Compile Include="src\ASF\common\services\serial\usart_serial.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\ASF\common\services\sleepmgr\sam\sleepmgr.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\common\services\sleepmgr\sam\sleepmgr.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\common\services\sleepmgr\sleepmgr.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\ASF\common\utils\interrupt.h">
       <SubType>compile</SubType>
     </Compile>
@@ -568,6 +582,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ASF\sam\boards\same70_xplained\same70_xplained.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\sam\drivers\afec\afec.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\sam\drivers\afec\afec.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ASF\sam\drivers\mpu\mpu.c">
@@ -1006,6 +1026,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ASF\thirdparty\CMSIS\Include\core_cmSimd.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\config\conf_sleepmgr.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\config\conf_uart_serial.h">

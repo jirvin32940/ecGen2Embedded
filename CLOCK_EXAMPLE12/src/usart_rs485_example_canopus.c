@@ -133,6 +133,7 @@
 #include "conf_example.h"
 #include "pca9952.h"
 #include "serial_id_ds2411.h"
+#include "afec.h"
 
 /** Size of the receive buffer and transmit buffer. */
 #define BUFFER_SIZE         2000
@@ -505,6 +506,122 @@ static void twi_init(void)
  * ABOVE: Carry over from EC GEN I code 31jan16 Modified for EC Gen II
  */
 
+
+/*
+ * Analog conversion...Bluesense0..3
+ */
+
+/** The conversion data is done flag */
+
+/** Reference voltage for AFEC,in mv. */
+#define VOLT_REF        (3300)
+
+/** The maximal digital value */
+#define MAX_DIGITAL     (4095UL)
+
+
+
+uint32_t ul_vol;
+
+volatile bool is_conversion_done[4] = {false, false, false, false};
+
+/** The conversion data value */
+volatile uint32_t g_ul_value[4] = {0, 0, 0, 0};
+
+
+uint8_t afecSel[4] = {AFEC1, AFEC0, AFEC0, AFEC0};
+uint8_t adcCh[4] = 	{AFEC_CHANNEL_9, AFEC_CHANNEL_0, AFEC_CHANNEL_4, AFEC_CHANNEL_5};
+
+/**
+ * \brief AFEC interrupt callback function.
+ */
+static void afec_end_conversion(uint8_t bluesenseCh)
+{
+	g_ul_value[bluesenseCh] = afec_channel_get_value(afecSel[bluesenseCh], adcCh[bluesenseCh]);
+	is_conversion_done[bluesenseCh] = true;
+}
+
+void afec_end_conversion_bluesense0(void)
+{
+	afec_end_conversion(0);
+}
+void afec_end_conversion_bluesense1(void)
+{
+	afec_end_conversion(1);
+}
+void afec_end_conversion_bluesense2(void)
+{
+	afec_end_conversion(2);
+}
+void afec_end_conversion_bluesense3(void)
+{
+	afec_end_conversion(3);
+}
+
+void init_adc(void)
+{
+	struct afec_config afec_cfg;
+
+	afec_get_config_defaults(&afec_cfg);
+
+	afec_init(AFEC0, &afec_cfg);
+	afec_init(AFEC1, &afec_cfg);
+
+	afec_set_trigger(AFEC0, AFEC_TRIG_SW);
+	afec_set_trigger(AFEC1, AFEC_TRIG_SW);
+
+	struct afec_ch_config afec_ch_cfg;
+	afec_ch_get_config_defaults(&afec_ch_cfg);
+
+	afec_ch_cfg.gain = AFEC_GAINVALUE_0;
+
+	afec_ch_set_config(AFEC1, AFEC_CHANNEL_9, &afec_ch_cfg); //bluesense0 for now
+	afec_ch_set_config(AFEC0, AFEC_CHANNEL_0, &afec_ch_cfg); //bluesense1 for now
+	afec_ch_set_config(AFEC0, AFEC_CHANNEL_4, &afec_ch_cfg); //bluesense2
+	afec_ch_set_config(AFEC0, AFEC_CHANNEL_5, &afec_ch_cfg); //bluesense3
+
+	/*
+	 * Because the internal ADC offset is 0x200, it should cancel it and shift
+	 * down to 0.
+	 */
+	afec_channel_set_analog_offset(AFEC1, AFEC_CHANNEL_9, 0x200);
+	afec_channel_set_analog_offset(AFEC0, AFEC_CHANNEL_0, 0x200);
+	afec_channel_set_analog_offset(AFEC0, AFEC_CHANNEL_4, 0x200);
+	afec_channel_set_analog_offset(AFEC0, AFEC_CHANNEL_5, 0x200);
+
+#if 0 //not sure if we have to do something else here for these non temp sensor channels or not 13feb16
+	struct afec_temp_sensor_config afec_temp_sensor_cfg;
+
+	afec_temp_sensor_get_config_defaults(&afec_temp_sensor_cfg);
+	afec_temp_sensor_cfg.rctc = true;
+	afec_temp_sensor_set_config(AFEC0, &afec_temp_sensor_cfg);
+#endif
+
+	afec_set_callback(AFEC1, AFEC_CHANNEL_9,
+		afec_end_conversion_bluesense0, 1);
+	afec_set_callback(AFEC0, AFEC_CHANNEL_0,
+		afec_end_conversion_bluesense1, 1);
+	afec_set_callback(AFEC0, AFEC_CHANNEL_4,
+		afec_end_conversion_bluesense2, 1);
+	afec_set_callback(AFEC0, AFEC_CHANNEL_5,
+		afec_end_conversion_bluesense3, 1);
+
+}
+
+void read_adc(uint8_t bluesenseCh)
+{
+	char printStr[32];
+	
+	ul_vol = g_ul_value[bluesenseCh] * VOLT_REF / MAX_DIGITAL;
+
+	sprintf(printStr, "adc ch %d: %4x\r\n", bluesenseCh, ul_vol);
+
+	func_transmit(printStr, strlen(printStr));
+
+	is_conversion_done[bluesenseCh] = false;
+}
+
+
 /**
  *  \brief usart_rs485 Application entry point.
  *
@@ -605,6 +722,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 
 	PCA9952_init();
 
+	init_adc();
 	
 	/*
 	 * Enable transmitter here, and disable receiver first, to avoid receiving
@@ -679,9 +797,23 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 			displayState = 0;
 		}
 		
+		/*
+		 * Read Bluesense lines
+		 */
 		
-	}
-}
+		if ((is_conversion_done[0] == true) &&
+		    (is_conversion_done[1] == true) &&
+		    (is_conversion_done[2] == true) &&
+		    (is_conversion_done[3] == true))
+		{
+			read_adc(0);
+			read_adc(1);
+			read_adc(2);
+			read_adc(3);
+		}
+		
+	}//while
+}//main
 
 
 int pristine_main(void) //jsi 6feb16 keep this one as it was from the example code

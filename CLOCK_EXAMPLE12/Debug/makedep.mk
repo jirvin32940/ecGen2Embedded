@@ -6,6 +6,8 @@ src\ASF\common\services\clock\same70\sysclk.c
 
 src\ASF\common\services\serial\usart_serial.c
 
+src\ASF\common\services\sleepmgr\sam\sleepmgr.c
+
 src\ASF\common\utils\interrupt\interrupt_sam_nvic.c
 
 src\ASF\common\utils\stdio\read.c
@@ -13,6 +15,8 @@ src\ASF\common\utils\stdio\read.c
 src\ASF\common\utils\stdio\write.c
 
 src\ASF\sam\boards\same70_xplained\init.c
+
+src\ASF\sam\drivers\afec\afec.c
 
 src\ASF\sam\drivers\mpu\mpu.c
 
