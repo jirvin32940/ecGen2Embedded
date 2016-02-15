@@ -523,7 +523,7 @@ static void twi_init(void)
 
 uint32_t ul_vol;
 
-volatile bool is_conversion_done[4] = {false, false, false, false};
+volatile bool is_conversion_done = false;
 
 /** The conversion data value */
 volatile uint32_t g_ul_value[4] = {0, 0, 0, 0};
@@ -547,11 +547,13 @@ uint32_t g_afec1_sample_data;
 static void afec0_data_ready(void)
 {
 	g_afec0_sample_data = afec_get_latest_value(AFEC0);
+	is_conversion_done = true;
 }
 
 static void afec1_data_ready(void)
 {
 	g_afec1_sample_data = afec_get_latest_value(AFEC1);
+	is_conversion_done = true;
 }
 
 
@@ -559,7 +561,7 @@ static void afec1_data_ready(void)
 static void afec_end_conversion(uint8_t bluesenseCh)
 {
 	g_ul_value[bluesenseCh] = afec_channel_get_value(afecSel[bluesenseCh], adcCh[bluesenseCh]);
-	is_conversion_done[bluesenseCh] = true;
+	is_conversion_done = true;
 }
 
 void afec_end_conversion_bluesense0(void)
@@ -638,7 +640,9 @@ void init_adc(void)
 	afec_enable(AFEC0);
 	afec_enable(AFEC1);
 
-	afec_cfg.resolution = AFEC_16_BITS;
+
+	afec_get_config_defaults(&afec_cfg);
+	afec_cfg.resolution = AFEC_12_BITS;
 	afec_init(AFEC0, &afec_cfg);
 	afec_init(AFEC1, &afec_cfg);
 	
@@ -647,8 +651,8 @@ void init_adc(void)
 	
 	afec_ch_set_config(AFEC1, AFEC_CHANNEL_9, &afec_ch_cfg);
 	afec_ch_set_config(AFEC0, AFEC_CHANNEL_0, &afec_ch_cfg);
-	afec_ch_set_config(AFEC0, AFEC_CHANNEL_4, &afec_ch_cfg);
-	afec_ch_set_config(AFEC0, AFEC_CHANNEL_5, &afec_ch_cfg);
+	afec_ch_set_config(AFEC1, AFEC_CHANNEL_4, &afec_ch_cfg);
+	afec_ch_set_config(AFEC1, AFEC_CHANNEL_5, &afec_ch_cfg);
 
 	afec_set_trigger(AFEC0, AFEC_TRIG_SW);
 	afec_set_trigger(AFEC1, AFEC_TRIG_SW);
@@ -675,7 +679,7 @@ void read_adc(uint8_t bluesenseCh)
 
 	func_transmit(printStr, strlen(printStr));
 
-	is_conversion_done[bluesenseCh] = false;
+	is_conversion_done = false;
 }
 
 
@@ -860,27 +864,31 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 		
 		afec_channel_enable(AFEC1, AFEC_CHANNEL_9);
 		afec_start_software_conversion(AFEC1);
-		while (afec_get_interrupt_status(AFEC1) & (1 << AFEC_CHANNEL_9));
+		is_conversion_done = false;
+		while (is_conversion_done == false);
 		g_ul_value[0] = g_afec1_sample_data;
 		afec_channel_disable(AFEC1, AFEC_CHANNEL_9);
 
 		afec_channel_enable(AFEC0, AFEC_CHANNEL_0);
 		afec_start_software_conversion(AFEC0);
-		while (afec_get_interrupt_status(AFEC0) & (1 << (AFEC_CHANNEL_0)));
+		is_conversion_done = false;
+		while (is_conversion_done == false);
 		g_ul_value[1] = g_afec0_sample_data;
 		afec_channel_disable(AFEC0, AFEC_CHANNEL_0);
 
-		afec_channel_enable(AFEC0, AFEC_CHANNEL_4);
-		afec_start_software_conversion(AFEC0);
-		while (afec_get_interrupt_status(AFEC0) & (1 << (AFEC_CHANNEL_4)));
-		g_ul_value[2] = g_afec0_sample_data;
-		afec_channel_disable(AFEC0, AFEC_CHANNEL_4);
+		afec_channel_enable(AFEC1, AFEC_CHANNEL_4);
+		afec_start_software_conversion(AFEC1);
+		is_conversion_done = false;
+		while (is_conversion_done == false);
+		g_ul_value[2] = g_afec1_sample_data;
+		afec_channel_disable(AFEC1, AFEC_CHANNEL_4);
 
-		afec_channel_enable(AFEC0, AFEC_CHANNEL_5);
-		afec_start_software_conversion(AFEC0);
-		while (afec_get_interrupt_status(AFEC0) & (1 << (AFEC_CHANNEL_5)));
-		g_ul_value[3] = g_afec0_sample_data;
-		afec_channel_disable(AFEC0, AFEC_CHANNEL_5);
+		afec_channel_enable(AFEC1, AFEC_CHANNEL_5);
+		afec_start_software_conversion(AFEC1);
+		is_conversion_done = false;
+		while (is_conversion_done == false);
+		g_ul_value[3] = g_afec1_sample_data;
+		afec_channel_disable(AFEC1, AFEC_CHANNEL_5);
 
 		if ((g_ul_value[0] != g_ul_last_value[0]) ||
 			(g_ul_value[1] != g_ul_last_value[1]) ||
