@@ -374,6 +374,7 @@
       <Value>../src/ASF/sam/utils/cmsis/same70/include</Value>
       <Value>../src/ASF/sam/drivers/usart</Value>
       <Value>../src/ASF/sam/drivers/uart</Value>
+      <Value>../src/ASF/sam/drivers/pwm</Value>
       <Value>../src/ASF/sam/utils/cmsis/same70/include/component</Value>
       <Value>../src/ASF/common/utils/stdio/stdio_serial</Value>
       <Value>../src/ASF/sam/drivers/usart/usart_rs485_example/same70q21_same70_xplained</Value>
@@ -459,6 +460,7 @@
     <Folder Include="src\ASF\sam\drivers\mpu\" />
     <Folder Include="src\ASF\sam\drivers\pio\" />
     <Folder Include="src\ASF\sam\drivers\pmc\" />
+    <Folder Include="src\ASF\sam\drivers\pwm\" />
     <Folder Include="src\ASF\sam\drivers\tc\" />
     <Folder Include="src\ASF\sam\drivers\twihs\" />
     <Folder Include="src\ASF\sam\drivers\uart\" />
@@ -618,6 +620,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ASF\sam\drivers\pmc\sleep.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\sam\drivers\pwm\pwm.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ASF\sam\drivers\pwm\pwm.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ASF\sam\drivers\tc\tc.c">

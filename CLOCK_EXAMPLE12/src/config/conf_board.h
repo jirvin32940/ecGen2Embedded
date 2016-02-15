@@ -63,4 +63,8 @@
 #define CONF_BOARD_USART_RTS
 //#define CONF_BOARD_USART_CTS
 
+/** Configure PWM pins used to control LEDs on board */
+#define CONF_BOARD_PWM_LED0
+//jsi 15feb16 i don't think we want this #define CONF_BOARD_PWM_LED1
+
 #endif /* CONF_BOARD_H_INCLUDED */

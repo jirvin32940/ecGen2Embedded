@@ -50,7 +50,7 @@
 /* ============================================================================= */
 /** \addtogroup SAME70_AFEC Analog Front-End Controller */
 /*@{*/
-	
+
 #if !(defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__))
 /** \brief Afec hardware registers */
 typedef struct {

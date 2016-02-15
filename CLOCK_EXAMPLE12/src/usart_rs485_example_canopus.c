@@ -135,6 +135,7 @@
 #include "serial_id_ds2411.h"
 #include "afec.h"
 
+
 /** Size of the receive buffer and transmit buffer. */
 #define BUFFER_SIZE         2000
 
@@ -530,8 +531,8 @@ volatile uint32_t g_ul_value[4] = {0, 0, 0, 0};
 volatile uint32_t g_ul_last_value[4] = {0, 0, 0, 0};
 
 
-uint8_t afecSel[4] = {AFEC1, AFEC0, AFEC0, AFEC0};
-uint8_t adcCh[4] = 	{AFEC_CHANNEL_9, AFEC_CHANNEL_0, AFEC_CHANNEL_4, AFEC_CHANNEL_5};
+uint8_t afecSel[4] = {AFEC1, AFEC0, AFEC1, AFEC1};
+uint8_t adcCh[4] = 	{AFEC_CHANNEL_9, AFEC_CHANNEL_4, AFEC_CHANNEL_4, AFEC_CHANNEL_5};
 
 /**
  * \brief AFEC interrupt callback function.
@@ -558,88 +559,14 @@ static void afec1_data_ready(void)
 
 
 
-static void afec_end_conversion(uint8_t bluesenseCh)
-{
-	g_ul_value[bluesenseCh] = afec_channel_get_value(afecSel[bluesenseCh], adcCh[bluesenseCh]);
-	is_conversion_done = true;
-}
-
-void afec_end_conversion_bluesense0(void)
-{
-	afec_end_conversion(0);
-}
-void afec_end_conversion_bluesense1(void)
-{
-	afec_end_conversion(1);
-}
-void afec_end_conversion_bluesense2(void)
-{
-	afec_end_conversion(2);
-}
-void afec_end_conversion_bluesense3(void)
-{
-	afec_end_conversion(3);
-}
-
 void init_adc(void)
 {
 	struct afec_config afec_cfg;
 	struct afec_ch_config afec_ch_cfg;
 
-#if 0
-	afec_get_config_defaults(&afec_cfg);
-
-	afec_init(AFEC0, &afec_cfg);
-	afec_init(AFEC1, &afec_cfg);
-
-	afec_set_trigger(AFEC0, AFEC_TRIG_SW);
-	afec_set_trigger(AFEC1, AFEC_TRIG_SW);
-
-	struct afec_ch_config afec_ch_cfg;
-	afec_ch_get_config_defaults(&afec_ch_cfg);
-
-	afec_ch_cfg.gain = AFEC_GAINVALUE_3;
-
-	afec_ch_set_config(AFEC1, AFEC_CHANNEL_9, &afec_ch_cfg); //bluesense0 for now
-	afec_ch_set_config(AFEC0, AFEC_CHANNEL_0, &afec_ch_cfg); //bluesense1 for now
-	afec_ch_set_config(AFEC0, AFEC_CHANNEL_4, &afec_ch_cfg); //bluesense2
-	afec_ch_set_config(AFEC0, AFEC_CHANNEL_5, &afec_ch_cfg); //bluesense3
-
-	/*
-	 * Because the internal ADC offset is 0x200, it should cancel it and shift
-	 * down to 0.
-	 */
-	afec_channel_set_analog_offset(AFEC1, AFEC_CHANNEL_9, 0x200);
-	afec_channel_set_analog_offset(AFEC0, AFEC_CHANNEL_0, 0x200);
-	afec_channel_set_analog_offset(AFEC0, AFEC_CHANNEL_4, 0x200);
-	afec_channel_set_analog_offset(AFEC0, AFEC_CHANNEL_5, 0x200);
-
-#if 0 //not sure if we have to do something else here for these non temp sensor channels or not 13feb16
-	struct afec_temp_sensor_config afec_temp_sensor_cfg;
-
-	afec_temp_sensor_get_config_defaults(&afec_temp_sensor_cfg);
-	afec_temp_sensor_cfg.rctc = true;
-	afec_temp_sensor_set_config(AFEC0, &afec_temp_sensor_cfg);
-
-	afec_set_callback(AFEC1, AFEC_CHANNEL_9,
-		afec_end_conversion_bluesense0, 1);
-	afec_set_callback(AFEC0, AFEC_CHANNEL_0,
-		afec_end_conversion_bluesense1, 1);
-	afec_set_callback(AFEC0, AFEC_CHANNEL_4,
-		afec_end_conversion_bluesense2, 1);
-	afec_set_callback(AFEC0, AFEC_CHANNEL_5,
-		afec_end_conversion_bluesense3, 1);
-#endif
-
-	afec_channel_enable(AFEC1, AFEC_CHANNEL_9);
-	afec_channel_enable(AFEC0, AFEC_CHANNEL_0);
-	afec_channel_enable(AFEC0, AFEC_CHANNEL_4);
-	afec_channel_enable(AFEC0, AFEC_CHANNEL_5);
-#endif	
 	
 	afec_enable(AFEC0);
 	afec_enable(AFEC1);
-
 
 	afec_get_config_defaults(&afec_cfg);
 	afec_cfg.resolution = AFEC_12_BITS;
@@ -650,7 +577,7 @@ void init_adc(void)
 	afec_ch_cfg.gain = AFEC_GAINVALUE_3;
 	
 	afec_ch_set_config(AFEC1, AFEC_CHANNEL_9, &afec_ch_cfg);
-	afec_ch_set_config(AFEC0, AFEC_CHANNEL_0, &afec_ch_cfg);
+	afec_ch_set_config(AFEC0, AFEC_CHANNEL_4, &afec_ch_cfg);
 	afec_ch_set_config(AFEC1, AFEC_CHANNEL_4, &afec_ch_cfg);
 	afec_ch_set_config(AFEC1, AFEC_CHANNEL_5, &afec_ch_cfg);
 
@@ -669,17 +596,127 @@ void init_adc(void)
 	
 }
 
-void read_adc(uint8_t bluesenseCh)
+
+/*
+ * PWM stuff for the buzzer
+ */
+
+/** PWM frequency in Hz */
+#define PWM_FREQUENCY      15000
+/** Period value of PWM output waveform */
+#define PERIOD_VALUE       100 //jsi 15feb16 what should this be? is this related to pwm frequency somehow?
+/** Initial duty cycle value */
+#define INIT_DUTY_VALUE    0
+
+/** PWM channel instance for LEDs */
+pwm_channel_t g_pwm_channel_led;
+
+
+/**
+ * \brief Interrupt handler for the PWM controller.
+ */
+void PWM0_Handler(void)
 {
-	char printStr[32];
+	static uint32_t ul_count = 0;  /* PWM counter value */
+	static uint32_t ul_duty = INIT_DUTY_VALUE;  /* PWM duty cycle rate */
+	static uint8_t fade_in = 1;  /* LED fade in flag */
+
+	uint32_t events = pwm_channel_get_interrupt_status(PWM0);
+
+	/* Interrupt on PIN_PWM_LED0_CHANNEL */
+	if ((events & (1 << PIN_PWM_LED0_CHANNEL)) ==
+	(1 << PIN_PWM_LED0_CHANNEL)) {
+		ul_count++;
+
+		/* Fade in/out */
+		if (ul_count == (PWM_FREQUENCY / (PERIOD_VALUE - INIT_DUTY_VALUE))) {
+			/* Fade in */
+			if (fade_in) {
+				ul_duty++;
+				if (ul_duty == PERIOD_VALUE) {
+					fade_in = 0;
+					}
+				} else {
+				/* Fade out */
+				ul_duty--;
+				if (ul_duty == INIT_DUTY_VALUE) {
+					fade_in = 1;
+				}
+			}
+
+			/* Set new duty cycle */
+			ul_count = 0;
+			g_pwm_channel_led.channel = PIN_PWM_LED0_CHANNEL;
+			pwm_channel_update_duty(PWM0, &g_pwm_channel_led, ul_duty);
+//jsi 15feb16			g_pwm_channel_led.channel = PIN_PWM_LED1_CHANNEL;
+//jsi 15feb16			pwm_channel_update_duty(PWM0, &g_pwm_channel_led, ul_duty);
+		}
+	}
+}
+
+
+
+void init_pwm(void)
+{
+	/* Enable PWM peripheral clock */
+	pmc_enable_periph_clk(ID_PWM0);
+
+	/* Disable PWM channels for LEDs */
+	pwm_channel_disable(PWM0, PIN_PWM_LED0_CHANNEL);
+	pwm_channel_disable(PWM0, PIN_PWM_LED1_CHANNEL);
+
+	/* Set PWM clock A as PWM_FREQUENCY*PERIOD_VALUE (clock B is not used) */
+	pwm_clock_t clock_setting = {
+		.ul_clka = PWM_FREQUENCY * PERIOD_VALUE,
+		.ul_clkb = 0,
+		.ul_mck = sysclk_get_cpu_hz()
+	};
+	pwm_init(PWM0, &clock_setting);
+
+	/* Initialize PWM channel for LED0 */
+	/* Period is left-aligned */
+	g_pwm_channel_led.alignment = PWM_ALIGN_LEFT;
+	/* Output waveform starts at a low level */
+	g_pwm_channel_led.polarity = PWM_LOW;
+	/* Use PWM clock A as source clock */
+	g_pwm_channel_led.ul_prescaler = PWM_CMR_CPRE_CLKA;
+	/* Period value of output waveform */
+	g_pwm_channel_led.ul_period = PERIOD_VALUE;
+	/* Duty cycle value of output waveform */
+	g_pwm_channel_led.ul_duty = INIT_DUTY_VALUE;
+	g_pwm_channel_led.channel = PIN_PWM_LED0_CHANNEL;
+	pwm_channel_init(PWM0, &g_pwm_channel_led);
+
+	/* Enable channel counter event interrupt */
+	pwm_channel_enable_interrupt(PWM0, PIN_PWM_LED0_CHANNEL, 0);
+
+	/* Initialize PWM channel for LED1 */
+	/* Period is center-aligned */
+	g_pwm_channel_led.alignment = PWM_ALIGN_CENTER;
+	/* Output waveform starts at a high level */
+	g_pwm_channel_led.polarity = PWM_HIGH;
+	/* Use PWM clock A as source clock */
+	g_pwm_channel_led.ul_prescaler = PWM_CMR_CPRE_CLKA;
+	/* Period value of output waveform */
+	g_pwm_channel_led.ul_period = PERIOD_VALUE;
+	/* Duty cycle value of output waveform */
+	g_pwm_channel_led.ul_duty = INIT_DUTY_VALUE;
+	g_pwm_channel_led.channel = PIN_PWM_LED1_CHANNEL;
+	pwm_channel_init(PWM0, &g_pwm_channel_led);
+
+	/* Disable channel counter event interrupt */
+	pwm_channel_disable_interrupt(PWM0, PIN_PWM_LED1_CHANNEL, 0);
+
+	/* Configure interrupt and enable PWM interrupt */
+	NVIC_DisableIRQ(PWM0_IRQn);
+	NVIC_ClearPendingIRQ(PWM0_IRQn);
+	NVIC_SetPriority(PWM0_IRQn, 0);
+	NVIC_EnableIRQ(PWM0_IRQn);
 	
-	ul_vol = g_ul_value[bluesenseCh] * VOLT_REF / MAX_DIGITAL;
+	/* Enable PWM channels for LEDs */
+	pwm_channel_enable(PWM0, PIN_PWM_LED0_CHANNEL);
+//jsi 15feb16	pwm_channel_enable(PWM0, PIN_PWM_LED1_CHANNEL);
 
-	sprintf(printStr, "adc ch %d: %4x\r\n", bluesenseCh, ul_vol);
-
-	func_transmit(printStr, strlen(printStr));
-
-	is_conversion_done = false;
 }
 
 
@@ -720,7 +757,8 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 	/* 1ms tick. */
 	configure_systick();
 
-
+	init_pwm();
+	
 	/*
 	 * Put into some kind of "init_io()" function at some point
 	 */
@@ -869,12 +907,12 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 		g_ul_value[0] = g_afec1_sample_data;
 		afec_channel_disable(AFEC1, AFEC_CHANNEL_9);
 
-		afec_channel_enable(AFEC0, AFEC_CHANNEL_0);
+		afec_channel_enable(AFEC0, AFEC_CHANNEL_4);
 		afec_start_software_conversion(AFEC0);
 		is_conversion_done = false;
 		while (is_conversion_done == false);
 		g_ul_value[1] = g_afec0_sample_data;
-		afec_channel_disable(AFEC0, AFEC_CHANNEL_0);
+		afec_channel_disable(AFEC0, AFEC_CHANNEL_4);
 
 		afec_channel_enable(AFEC1, AFEC_CHANNEL_4);
 		afec_start_software_conversion(AFEC1);

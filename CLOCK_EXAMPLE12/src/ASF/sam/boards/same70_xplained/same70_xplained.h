@@ -324,7 +324,7 @@
 #define PIN_CAN1_TX_FLAGS         IOPORT_MODE_MUX_C
 
 /** PWM LED0 pin definitions. */
-#define PIN_PWM_LED0_GPIO    PIO_PA23_IDX
+#define PIN_PWM_LED0_GPIO    PIO_PA11_IDX //jsi 15feb16 this is our buzzer pin
 #define PIN_PWM_LED0_FLAGS   (IOPORT_MODE_MUX_B)
 #define PIN_PWM_LED0_CHANNEL PWM_CHANNEL_0
 
