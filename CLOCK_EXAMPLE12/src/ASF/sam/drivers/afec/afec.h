@@ -716,6 +716,7 @@ static inline Pdc *afec_get_pdc_base(Afec *const afec)
  * \retval STATUS_ERR_BUSY  Automatic calibration can not be launched because
  *         the AFEC is in freerun mode.
  */
+
 static inline enum status_code afec_start_calibration(Afec *const afec)
 {
 	uint32_t reg;

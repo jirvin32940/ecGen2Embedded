@@ -527,6 +527,7 @@ volatile bool is_conversion_done[4] = {false, false, false, false};
 
 /** The conversion data value */
 volatile uint32_t g_ul_value[4] = {0, 0, 0, 0};
+volatile uint32_t g_ul_last_value[4] = {0, 0, 0, 0};
 
 
 uint8_t afecSel[4] = {AFEC1, AFEC0, AFEC0, AFEC0};
@@ -535,6 +536,26 @@ uint8_t adcCh[4] = 	{AFEC_CHANNEL_9, AFEC_CHANNEL_0, AFEC_CHANNEL_4, AFEC_CHANNE
 /**
  * \brief AFEC interrupt callback function.
  */
+
+/**
+ * \brief AFEC0 DRDY interrupt callback function.
+ */
+
+uint32_t g_afec0_sample_data;
+uint32_t g_afec1_sample_data;
+
+static void afec0_data_ready(void)
+{
+	g_afec0_sample_data = afec_get_latest_value(AFEC0);
+}
+
+static void afec1_data_ready(void)
+{
+	g_afec1_sample_data = afec_get_latest_value(AFEC1);
+}
+
+
+
 static void afec_end_conversion(uint8_t bluesenseCh)
 {
 	g_ul_value[bluesenseCh] = afec_channel_get_value(afecSel[bluesenseCh], adcCh[bluesenseCh]);
@@ -561,7 +582,9 @@ void afec_end_conversion_bluesense3(void)
 void init_adc(void)
 {
 	struct afec_config afec_cfg;
+	struct afec_ch_config afec_ch_cfg;
 
+#if 0
 	afec_get_config_defaults(&afec_cfg);
 
 	afec_init(AFEC0, &afec_cfg);
@@ -573,7 +596,7 @@ void init_adc(void)
 	struct afec_ch_config afec_ch_cfg;
 	afec_ch_get_config_defaults(&afec_ch_cfg);
 
-	afec_ch_cfg.gain = AFEC_GAINVALUE_0;
+	afec_ch_cfg.gain = AFEC_GAINVALUE_3;
 
 	afec_ch_set_config(AFEC1, AFEC_CHANNEL_9, &afec_ch_cfg); //bluesense0 for now
 	afec_ch_set_config(AFEC0, AFEC_CHANNEL_0, &afec_ch_cfg); //bluesense1 for now
@@ -595,7 +618,6 @@ void init_adc(void)
 	afec_temp_sensor_get_config_defaults(&afec_temp_sensor_cfg);
 	afec_temp_sensor_cfg.rctc = true;
 	afec_temp_sensor_set_config(AFEC0, &afec_temp_sensor_cfg);
-#endif
 
 	afec_set_callback(AFEC1, AFEC_CHANNEL_9,
 		afec_end_conversion_bluesense0, 1);
@@ -605,7 +627,42 @@ void init_adc(void)
 		afec_end_conversion_bluesense2, 1);
 	afec_set_callback(AFEC0, AFEC_CHANNEL_5,
 		afec_end_conversion_bluesense3, 1);
+#endif
 
+	afec_channel_enable(AFEC1, AFEC_CHANNEL_9);
+	afec_channel_enable(AFEC0, AFEC_CHANNEL_0);
+	afec_channel_enable(AFEC0, AFEC_CHANNEL_4);
+	afec_channel_enable(AFEC0, AFEC_CHANNEL_5);
+#endif	
+	
+	afec_enable(AFEC0);
+	afec_enable(AFEC1);
+
+	afec_cfg.resolution = AFEC_16_BITS;
+	afec_init(AFEC0, &afec_cfg);
+	afec_init(AFEC1, &afec_cfg);
+	
+	afec_ch_get_config_defaults(&afec_ch_cfg);
+	afec_ch_cfg.gain = AFEC_GAINVALUE_3;
+	
+	afec_ch_set_config(AFEC1, AFEC_CHANNEL_9, &afec_ch_cfg);
+	afec_ch_set_config(AFEC0, AFEC_CHANNEL_0, &afec_ch_cfg);
+	afec_ch_set_config(AFEC0, AFEC_CHANNEL_4, &afec_ch_cfg);
+	afec_ch_set_config(AFEC0, AFEC_CHANNEL_5, &afec_ch_cfg);
+
+	afec_set_trigger(AFEC0, AFEC_TRIG_SW);
+	afec_set_trigger(AFEC1, AFEC_TRIG_SW);
+
+	afec_set_callback(AFEC0, AFEC_INTERRUPT_DATA_READY, afec0_data_ready, 1);
+	afec_set_callback(AFEC1, AFEC_INTERRUPT_DATA_READY, afec1_data_ready, 1);
+
+// Got this calibration code from a SAM4E example, supposedly code compatible with the SAME70, but this doesn't build
+//	afec_start_calibration(AFEC0);
+//	while((afec_get_interrupt_status(AFEC0) & AFEC_ISR_EOCAL) != AFEC_ISR_EOCAL);
+	
+//	afec_start_calibration(AFEC1);
+//	while((afec_get_interrupt_status(AFEC1) & AFEC_ISR_EOCAL) != AFEC_ISR_EOCAL);
+	
 }
 
 void read_adc(uint8_t bluesenseCh)
@@ -801,126 +858,43 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 		 * Read Bluesense lines
 		 */
 		
-		if ((is_conversion_done[0] == true) &&
-		    (is_conversion_done[1] == true) &&
-		    (is_conversion_done[2] == true) &&
-		    (is_conversion_done[3] == true))
+		afec_channel_enable(AFEC1, AFEC_CHANNEL_9);
+		afec_start_software_conversion(AFEC1);
+		while (afec_get_interrupt_status(AFEC1) & (1 << AFEC_CHANNEL_9));
+		g_ul_value[0] = g_afec1_sample_data;
+		afec_channel_disable(AFEC1, AFEC_CHANNEL_9);
+
+		afec_channel_enable(AFEC0, AFEC_CHANNEL_0);
+		afec_start_software_conversion(AFEC0);
+		while (afec_get_interrupt_status(AFEC0) & (1 << (AFEC_CHANNEL_0)));
+		g_ul_value[1] = g_afec0_sample_data;
+		afec_channel_disable(AFEC0, AFEC_CHANNEL_0);
+
+		afec_channel_enable(AFEC0, AFEC_CHANNEL_4);
+		afec_start_software_conversion(AFEC0);
+		while (afec_get_interrupt_status(AFEC0) & (1 << (AFEC_CHANNEL_4)));
+		g_ul_value[2] = g_afec0_sample_data;
+		afec_channel_disable(AFEC0, AFEC_CHANNEL_4);
+
+		afec_channel_enable(AFEC0, AFEC_CHANNEL_5);
+		afec_start_software_conversion(AFEC0);
+		while (afec_get_interrupt_status(AFEC0) & (1 << (AFEC_CHANNEL_5)));
+		g_ul_value[3] = g_afec0_sample_data;
+		afec_channel_disable(AFEC0, AFEC_CHANNEL_5);
+
+		if ((g_ul_value[0] != g_ul_last_value[0]) ||
+			(g_ul_value[1] != g_ul_last_value[1]) ||
+			(g_ul_value[2] != g_ul_last_value[2]) ||
+			(g_ul_value[3] != g_ul_last_value[3]))
 		{
-			read_adc(0);
-			read_adc(1);
-			read_adc(2);
-			read_adc(3);
+			sprintf(printStr,"ch0: %x ch1: %x ch2: %x ch3: %x\r\n", g_ul_value[0], g_ul_value[1], g_ul_value[2], g_ul_value[3]);
+			func_transmit(printStr, strlen(printStr));
+			g_ul_last_value[0] = g_ul_value[0];
+			g_ul_last_value[1] = g_ul_value[1];
+			g_ul_last_value[2] = g_ul_value[2];
+			g_ul_last_value[3] = g_ul_value[3];
 		}
+		
 		
 	}//while
 }//main
-
-
-int pristine_main(void) //jsi 6feb16 keep this one as it was from the example code
-{
-	static uint8_t uc_sync = SYNC_CHAR;
-	uint32_t time_elapsed = 0;
-	uint32_t ul_i;
-
-	/* Initialize the SAM system. */
-	sysclk_init();
-	board_init();
-
-	/* Configure UART for debug message output. */
-	configure_console();
-
-	/* Output example information. */
-	puts(STRING_HEADER);
-
-	/* Configure USART. */
-	configure_usart();
-
-
-	/* 1ms tick. */
-	configure_systick();
-
-	/* Initialize receiving buffer to distinguish with the sent frame. */
-	memset(g_uc_receive_buffer, 0x0, BUFFER_SIZE);
-
-	/*
-	 * Enable transmitter here, and disable receiver first, to avoid receiving
-	 * characters sent by itself. It's necessary for half duplex RS485.
-	 */
-	usart_enable_tx(BOARD_USART);
-	usart_disable_rx(BOARD_USART);
-
-	/* Send a sync character XON (0x11). */
-	func_transmit(&uc_sync, 1);
-	/* Delay until the line is cleared, an estimated time used. */
-	wait(50);
-
-	/* Then enable receiver. */
-	usart_enable_rx(BOARD_USART);
-
-	/* Wait until time out or acknowledgement is received. */
-	time_elapsed = get_tick_count();
-	while (!usart_is_rx_ready(BOARD_USART)) {
-		if (get_tick_count() - time_elapsed > TIMEOUT) {
-			break;
-		}
-	}
-
-	/* If acknowledgment received in a short time. */
-	if (usart_is_rx_ready(BOARD_USART)) {
-		wait(50);
-		usart_read(BOARD_USART, (uint32_t *)&uc_sync);
-		/* Acknowledgment. */
-		if (uc_sync == ACK_CHAR) {
-			/* Act as transmitter, start transmitting. */
-			g_state = TRANSMITTING;
-			puts("-I- Start transmitting!\r");
-
-			func_transmit(&g_uc_transmit_buffer[0], BUFFER_SIZE);
-		}
-	} else {
-		/* Start receiving, act as receiver. */
-		puts("-I- Receiving sync character.\r");
-		while (!usart_is_rx_ready(BOARD_USART)) {
-		}
-		wait(50);
-		/* Sync character is received. */
-		usart_read(BOARD_USART, (uint32_t *)&uc_sync);
-		if (uc_sync == SYNC_CHAR) {
-			/* SEND XOff as acknowledgement. */
-			uc_sync = ACK_CHAR;
-
-			/*
-			 * Delay to prevent the character from being discarded by
-			 * transmitter due to responding too soon.
-			 */
-			wait(50);
-
-			/* Send a ack character XOff . */
-			func_transmit(&uc_sync, 1);
-
-			g_state = RECEIVING;
-			puts("-I- Start receiving!\r");
-
-			/* Enable receiving interrupt. */
-			usart_enable_interrupt(BOARD_USART, US_IER_RXRDY);
-		}
-	}
-	while (g_state != RECEIVED) {
-	}
-
-	ul_i = 0;
-	/* Print received frame out. */
-	while ((ul_i < BUFFER_SIZE) && (g_uc_receive_buffer[ul_i] != '\0')) {
-		if (g_uc_transmit_buffer[ul_i] != g_uc_receive_buffer[ul_i]) {
-			puts("-E- Error occurred while receiving!\r");
-			/* Infinite loop here. */
-			while (1) {
-			}
-		}
-		ul_i++;
-	}
-	puts("-I- Received successfully!\r");
-	dump_info((char *)g_uc_receive_buffer, BUFFER_SIZE);
-	while (1) {
-	}
-}
