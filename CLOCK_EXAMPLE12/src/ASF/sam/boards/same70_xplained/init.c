@@ -351,6 +351,9 @@ void board_init(void)
 	 */
 	ioport_set_pin_dir(LED0_GPIO, IOPORT_DIR_OUTPUT);
 	ioport_set_pin_level(LED0_GPIO, LED0_INACTIVE_LEVEL);
+	
+//jsi 15feb16	ioport_set_pin_dir(ECLAVE_PSUPPLY_ONn, IOPORT_DIR_OUTPUT);
+//jsi 15feb16	ioport_set_pin_level(ECLAVE_PSUPPLY_ONn, IOPORT_PIN_LEVEL_HIGH);
 
 	/* Configure Push Button pins */
 	ioport_set_pin_input_mode(GPIO_PUSH_BUTTON_1, GPIO_PUSH_BUTTON_1_FLAGS,

@@ -33,7 +33,7 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  14 .debug_line   0000ed01  00000000  00000000  000586c2  2**0
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_str    0008d2e9  00000000  00000000  000673c3  2**0
+ 15 .debug_str    0008d2e7  00000000  00000000  000673c3  2**0
                   CONTENTS, READONLY, DEBUGGING
  16 .debug_frame  00005778  00000000  00000000  000f46ac  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -1965,6 +1965,9 @@ void board_init(void)
   400a86:	2101      	movs	r1, #1
   400a88:	4b24      	ldr	r3, [pc, #144]	; (400b1c <board_init+0xb0>)
   400a8a:	4798      	blx	r3
+	
+//jsi 15feb16	ioport_set_pin_dir(ECLAVE_PSUPPLY_ONn, IOPORT_DIR_OUTPUT);
+//jsi 15feb16	ioport_set_pin_level(ECLAVE_PSUPPLY_ONn, IOPORT_PIN_LEVEL_HIGH);
 
 	/* Configure Push Button pins */
 	ioport_set_pin_input_mode(GPIO_PUSH_BUTTON_1, GPIO_PUSH_BUTTON_1_FLAGS,
@@ -11390,7 +11393,7 @@ void PWM0_Handler(void)
 		if (ul_count == (PWM_FREQUENCY / (PERIOD_VALUE - INIT_DUTY_VALUE))) {
   403b66:	4b1a      	ldr	r3, [pc, #104]	; (403bd0 <PWM0_Handler+0x8c>)
   403b68:	681b      	ldr	r3, [r3, #0]
-  403b6a:	2b96      	cmp	r3, #150	; 0x96
+  403b6a:	2b08      	cmp	r3, #8
   403b6c:	d129      	bne.n	403bc2 <PWM0_Handler+0x7e>
 			/* Fade in */
 			if (fade_in) {
@@ -11647,7 +11650,7 @@ void init_pwm(void)
   403cb0:	00401681 	.word	0x00401681
   403cb4:	40020000 	.word	0x40020000
   403cb8:	00401b55 	.word	0x00401b55
-  403cbc:	0016e360 	.word	0x0016e360
+  403cbc:	00013880 	.word	0x00013880
   403cc0:	00403225 	.word	0x00403225
   403cc4:	00401781 	.word	0x00401781
   403cc8:	20400abc 	.word	0x20400abc

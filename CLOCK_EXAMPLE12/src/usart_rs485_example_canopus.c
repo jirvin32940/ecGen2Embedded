@@ -602,7 +602,7 @@ void init_adc(void)
  */
 
 /** PWM frequency in Hz */
-#define PWM_FREQUENCY      15000
+#define PWM_FREQUENCY      800
 /** Period value of PWM output waveform */
 #define PERIOD_VALUE       100 //jsi 15feb16 what should this be? is this related to pwm frequency somehow?
 /** Initial duty cycle value */

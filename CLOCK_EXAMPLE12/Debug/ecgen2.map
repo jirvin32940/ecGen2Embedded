@@ -9279,7 +9279,7 @@ OUTPUT(ecgen2.elf elf32-littlearm)
  .debug_line    0x0000cad0      0xd7d src/serial_id_ds2411.o
  .debug_line    0x0000d84d     0x14b4 src/usart_rs485_example_canopus.o
 
-.debug_str      0x00000000    0x8d2e9
+.debug_str      0x00000000    0x8d2e7
  .debug_str     0x00000000    0x848ea src/ASF/common/services/clock/same70/sysclk.o
                               0x84f2a (size before relaxing)
  .debug_str     0x000848ea      0x1b9 src/ASF/common/services/sleepmgr/sam/sleepmgr.o
@@ -9318,8 +9318,8 @@ OUTPUT(ecgen2.elf elf32-littlearm)
                               0x84f3d (size before relaxing)
  .debug_str     0x0008b5f6      0x241 src/serial_id_ds2411.o
                               0x8548f (size before relaxing)
- .debug_str     0x0008b837     0x1ab2 src/usart_rs485_example_canopus.o
-                              0x894c2 (size before relaxing)
+ .debug_str     0x0008b837     0x1ab0 src/usart_rs485_example_canopus.o
+                              0x894c0 (size before relaxing)
 
 .debug_frame    0x00000000     0x5778
  .debug_frame   0x00000000      0x240 src/ASF/common/services/clock/same70/sysclk.o
