@@ -455,12 +455,6 @@ enum {
 
 volatile U16 adc_current_conversion;
 
-#define ECLAVE_DOOR_LATCH	//TBD different scheme now
-#define ECLAVE_ACTION_PB	//TBD different scheme now
-#define ECLAVE_DEBUG_LED	PIO_PC16_IDX
-#define ECLAVE_PSUPPLY_ONn	PIO_PA2_IDX
-#define ECLAVE_LED_OEn		PIO_PA1_IDX
-#define ECLAVE_MFP			PIO_PA0_IDX	//set to 1 for 1X, set to 0 for 4X
 
 //TBD different scheme now #define EC_DOOR_LATCHED (!gpio_get_pin_value(ECLAVE_DOOR_LATCH)) //12apr15 this is the correct sense for the equipment going to the show
 //TBD different scheme now #define EC_ACTION_PB	(!gpio_get_pin_value(ECLAVE_ACTION_PB)) //12apr15 this is the correct sense for the equipment going to the show
@@ -602,11 +596,11 @@ void init_adc(void)
  */
 
 /** PWM frequency in Hz */
-#define PWM_FREQUENCY      800
+#define PWM_FREQUENCY      2000
 /** Period value of PWM output waveform */
 #define PERIOD_VALUE       100 //jsi 15feb16 what should this be? is this related to pwm frequency somehow?
 /** Initial duty cycle value */
-#define INIT_DUTY_VALUE    0
+#define INIT_DUTY_VALUE    (PERIOD_VALUE/2)
 
 /** PWM channel instance for LEDs */
 pwm_channel_t g_pwm_channel_led;
@@ -647,7 +641,8 @@ void PWM0_Handler(void)
 			/* Set new duty cycle */
 			ul_count = 0;
 			g_pwm_channel_led.channel = PIN_PWM_LED0_CHANNEL;
-			pwm_channel_update_duty(PWM0, &g_pwm_channel_led, ul_duty);
+//jsi 16feb16			pwm_channel_update_duty(PWM0, &g_pwm_channel_led, ul_duty);
+					pwm_channel_update_duty(PWM0, &g_pwm_channel_led, (PERIOD_VALUE/2)); //jsi 16feb16 just fixed for now
 //jsi 15feb16			g_pwm_channel_led.channel = PIN_PWM_LED1_CHANNEL;
 //jsi 15feb16			pwm_channel_update_duty(PWM0, &g_pwm_channel_led, ul_duty);
 		}
@@ -731,6 +726,45 @@ void init_pwm(void)
 
 #  define EXAMPLE_LED_GPIO    LED0_GPIO
 
+struct {
+
+	uint8_t psupply_onn;
+	uint8_t ledoen;
+	uint8_t MFP;
+	uint8_t buzzer;
+	uint8_t solenoid;
+
+}controls;
+
+struct {
+
+	uint8_t doorsw1;
+	uint8_t doorsw2;
+
+	uint8_t last_doorsw1;
+	uint8_t last_doorsw2;	
+
+	uint8_t col3;
+	uint8_t col2;
+	uint8_t col1;
+	uint8_t row3;
+	uint8_t row2;
+	uint8_t row1;
+		
+	uint8_t last_col3;
+	uint8_t last_col2;
+	uint8_t last_col1;
+	uint8_t last_row3;
+	uint8_t last_row2;
+	uint8_t last_row1;
+	
+}status;
+
+void toggle(uint8_t *var)
+{
+	*var  = (((*var)+1) & 1);
+}
+
 int main(void) //6feb16 this version of main has been hacked up for only exactly what we need
 {
 	char		txBuf[11] = {0,0,0,0,0,0,0,0,0,0,0}, rxByte;
@@ -743,6 +777,34 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 	char		printStr[64];
 	
 	unsigned char idFamily, acc, id[6], idcsum; //10feb16 temp serial ID code, make more formal later
+
+	controls.psupply_onn = 1;
+	controls.ledoen = 1;
+	controls.MFP = 0;
+	controls.buzzer	= 1;
+	controls.solenoid = 0;
+	
+	status.doorsw1 = 0;
+	status.doorsw2 = 0;
+	status.last_doorsw1 = 0;
+	status.last_doorsw2 = 0;
+
+	status.col1 = 0;
+	status.col2 = 0;
+	status.col3 = 0;
+	status.row1 = 0;
+	status.row2 = 0;
+	status.row3 = 0;
+	
+	status.last_col1 = 0;
+	status.last_col2 = 0;
+	status.last_col3 = 0;
+	status.last_row1 = 0;
+	status.last_row2 = 0;
+	status.last_row3 = 0;
+	
+	
+
 
 	/* Initialize the SAM system. */
 	sysclk_init();
@@ -840,10 +902,116 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 		for (i=0; i<70; i++) //7 seconds
 		{
 			mdelay(100);
+			
+			
+			/*
+			 * IO inputs
+			 */
+			status.doorsw1 = ioport_get_pin_level(ECLAVE_DOORSW1);
+			status.doorsw2 = ioport_get_pin_level(ECLAVE_DOORSW2);
+			
+			if ((status.doorsw1 != status.last_doorsw1) ||
+				(status.doorsw2 != status.last_doorsw2))
+			{
+				sprintf(printStr,"doorsw1: %d doorsw2: %d\r\n", status.doorsw1, status.doorsw2);
+				func_transmit(printStr, strlen(printStr));
+				status.last_doorsw1 = status.doorsw1;
+				status.last_doorsw2 = status.doorsw2;	
+			}
+			
+			
+			status.col3 = ioport_get_pin_level(ECLAVE_COL3);
+			status.col2 = ioport_get_pin_level(ECLAVE_COL2);
+			status.col1 = ioport_get_pin_level(ECLAVE_COL1);
+			status.row3 = ioport_get_pin_level(ECLAVE_ROW3);
+			status.row2 = ioport_get_pin_level(ECLAVE_ROW2);
+			status.row1 = ioport_get_pin_level(ECLAVE_ROW1);
+			
+			if ((status.col3 != status.last_col3) ||
+			(status.col2 != status.last_col2) ||
+			(status.col1 != status.last_col1) ||
+			(status.row3 != status.last_row3) ||
+			(status.row2 != status.last_row2) ||
+			(status.row1 != status.last_row1))
+			{
+				sprintf(printStr,"ROW321: %d%d%d COL321 %d%d%d\r\n",
+						status.row3, status.row2, status.row1, status.col3, status.col2, status.col1);
+				func_transmit(printStr, strlen(printStr));
+				
+				status.last_col1 = status.col1;	
+				status.last_col2 = status.col2;	
+				status.last_col3 = status.col3;
+				status.last_row1 = status.row1;	
+				status.last_row2 = status.row2;	
+				status.last_row3 = status.row3;	
+			}
 		
 			if (usart_is_rx_ready(BOARD_USART)) {
 				usart_read(BOARD_USART, (uint32_t *)&rxByte);
 				func_transmit(&rxByte, 1);
+				
+				switch(rxByte)
+				{
+					case 'P':
+					case 'p':
+						toggle(&controls.psupply_onn);
+						sprintf(printStr,"PSUPPLY_ONn: %d\r\n", controls.psupply_onn);
+						func_transmit(printStr, strlen(printStr));
+//jsi 16feb16 maybe we don't have enough juice to do this, this causes the board to reset						ioport_toggle_pin_level(ECLAVE_PSUPPLY_ONn);
+						break;
+					case 'L':
+					case 'l':
+						toggle(&controls.ledoen);
+						sprintf(printStr,"LEDOEn: %d\r\n", controls.ledoen);
+						func_transmit(printStr, strlen(printStr));
+						ioport_toggle_pin_level(ECLAVE_LED_OEn);
+						break;
+					case 'M':
+					case 'm':
+						toggle(&controls.MFP);
+						sprintf(printStr,"MFP: %d\r\n", controls.MFP);
+						func_transmit(printStr, strlen(printStr));
+						ioport_toggle_pin_level(ECLAVE_MFP);
+						break;
+					case 'B':
+					case 'b':
+						toggle(&controls.buzzer);
+						sprintf(printStr,"Buzzer: %d\r\n", controls.buzzer);
+						func_transmit(printStr, strlen(printStr));
+						if (controls.buzzer)
+						{
+							pwm_channel_enable(PWM0, PIN_PWM_LED0_CHANNEL);
+						}
+						else
+						{
+							pwm_channel_disable(PWM0, PIN_PWM_LED0_CHANNEL);
+						}
+						break;
+					case 'S':
+					case 's':
+						toggle(&controls.solenoid);
+						sprintf(printStr,"Solenoid: %d\r\n", controls.solenoid);
+						func_transmit(printStr, strlen(printStr));
+						ioport_toggle_pin_level(ECLAVE_SOLENOID);
+						break;
+					case 'H':
+					case 'h':
+						sprintf(printStr,"HELP MENU\r\n");
+						func_transmit(printStr, strlen(printStr));
+						sprintf(printStr,"P - Toggle PSUPPLY_ONn\r\n");
+						func_transmit(printStr, strlen(printStr));
+						sprintf(printStr,"L - Toggle LEDOEn\r\n");
+						func_transmit(printStr, strlen(printStr));
+						sprintf(printStr,"M - Toggle MFP\r\n");
+						func_transmit(printStr, strlen(printStr));
+						sprintf(printStr,"B - Toggle buzzer\r\n");
+						func_transmit(printStr, strlen(printStr));
+						sprintf(printStr,"S - Toggle solenoid\r\n");
+						func_transmit(printStr, strlen(printStr));
+						sprintf(printStr,"H - This menu\r\n");
+						func_transmit(printStr, strlen(printStr));
+						break;
+				}
 			}
 		}
 
