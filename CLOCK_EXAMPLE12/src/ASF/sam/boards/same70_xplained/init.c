@@ -364,6 +364,9 @@ void board_init(void)
 	ioport_set_pin_dir(ECLAVE_SOLENOID, IOPORT_DIR_OUTPUT);
 	ioport_set_pin_level(ECLAVE_SOLENOID, IOPORT_PIN_LEVEL_LOW);
 
+	ioport_set_pin_dir(ECLAVE_DOORSW1, IOPORT_DIR_INPUT);
+	ioport_set_pin_dir(ECLAVE_DOORSW2, IOPORT_DIR_INPUT);
+
 	/* Configure Push Button pins */
 	ioport_set_pin_input_mode(GPIO_PUSH_BUTTON_1, GPIO_PUSH_BUTTON_1_FLAGS,
 			GPIO_PUSH_BUTTON_1_SENSE);

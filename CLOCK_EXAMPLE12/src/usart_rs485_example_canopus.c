@@ -225,6 +225,132 @@ void mdelay(uint32_t ul_dly_ticks)
 }
 
 
+#define BUZZER_ON_COUNT		1000	//ms
+#define BUZZER_OFF_COUNT	1000	//ms
+#define SOLENOID_ON_COUNT	500		//ms
+#define SOLENOID_OFF_COUNT	500		//ms
+#define CYCLE_ON			1		
+#define CYCLE_OFF			0
+
+struct {
+
+	uint8_t		psupply_onn;
+	uint8_t		ledoen;
+	uint8_t		MFP;
+	uint8_t		buzzer_enable;
+	uint8_t		buzzer_cycle;
+	uint16_t	buzzer_count; 
+	uint8_t		solenoid_enable;
+	uint8_t		solenoid_cycle;
+	uint16_t	solenoid_count; 
+
+}controls;
+
+struct {
+
+	uint8_t doorsw1;
+	uint8_t doorsw2;
+
+	uint8_t last_doorsw1;
+	uint8_t last_doorsw2;	
+
+	uint8_t col3;
+	uint8_t col2;
+	uint8_t col1;
+	uint8_t row3;
+	uint8_t row2;
+	uint8_t row1;
+		
+	uint8_t last_col3;
+	uint8_t last_col2;
+	uint8_t last_col1;
+	uint8_t last_row3;
+	uint8_t last_row2;
+	uint8_t last_row1;
+	uint8_t keypad;
+	
+}status;
+
+void toggle(uint8_t *var)
+{
+	*var  = (((*var)+1) & 1);
+}
+
+/*
+ * Bits packed ROW3, 2, 1, COL2, 1.
+ * For example, if ROW3..1 is 0b111 and COL2..1 is 0b01 the packed bits are 0x1D and we recognize that as SW1
+ */
+
+#define KEYPAD_SW1	0x1D
+#define KEYPAD_SW2	0x15
+#define KEYPAD_SW3	0x19
+#define KEYPAD_SW4	0x0E
+#define KEYPAD_SW5	0x16
+#define KEYPAD_SW6	0x1A
+
+void scan_keypad(void)
+{
+	uint8_t tempKeypad;
+	
+	ioport_set_pin_dir(ECLAVE_COL3, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_dir(ECLAVE_COL2, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_dir(ECLAVE_COL1, IOPORT_DIR_OUTPUT);
+
+	ioport_set_pin_dir(ECLAVE_ROW3, IOPORT_DIR_INPUT);
+	ioport_set_pin_dir(ECLAVE_ROW2, IOPORT_DIR_INPUT);
+	ioport_set_pin_dir(ECLAVE_ROW1, IOPORT_DIR_INPUT);
+	
+	ioport_set_pin_level(ECLAVE_COL3, IOPORT_PIN_LEVEL_LOW);
+	ioport_set_pin_level(ECLAVE_COL2, IOPORT_PIN_LEVEL_LOW);
+	ioport_set_pin_level(ECLAVE_COL1, IOPORT_PIN_LEVEL_LOW);
+
+	status.row3 = ioport_get_pin_level(ECLAVE_ROW3);
+	status.row2 = ioport_get_pin_level(ECLAVE_ROW2);
+	status.row1 = ioport_get_pin_level(ECLAVE_ROW1);
+
+
+	ioport_set_pin_dir(ECLAVE_ROW3, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_dir(ECLAVE_ROW2, IOPORT_DIR_OUTPUT);
+	ioport_set_pin_dir(ECLAVE_ROW1, IOPORT_DIR_OUTPUT);
+
+	ioport_set_pin_dir(ECLAVE_COL3, IOPORT_DIR_INPUT);
+	ioport_set_pin_dir(ECLAVE_COL2, IOPORT_DIR_INPUT);
+	ioport_set_pin_dir(ECLAVE_COL1, IOPORT_DIR_INPUT);
+	
+	ioport_set_pin_level(ECLAVE_ROW3, IOPORT_PIN_LEVEL_LOW);
+	ioport_set_pin_level(ECLAVE_ROW2, IOPORT_PIN_LEVEL_LOW);
+	ioport_set_pin_level(ECLAVE_ROW1, IOPORT_PIN_LEVEL_LOW);
+
+	status.col3 = ioport_get_pin_level(ECLAVE_COL3);
+	status.col2 = ioport_get_pin_level(ECLAVE_COL2);
+	status.col1 = ioport_get_pin_level(ECLAVE_COL1);
+	
+	tempKeypad = ((status.row3 << 4) |
+					(status.row2 << 3) |
+					(status.row1 << 2) |
+					(status.col2 << 1) |
+					(status.col1));
+					
+	switch (tempKeypad)
+	{
+		case KEYPAD_SW1:
+		case KEYPAD_SW2:
+		case KEYPAD_SW3:
+		case KEYPAD_SW4:
+		case KEYPAD_SW5:
+		case KEYPAD_SW6:
+			status.keypad = tempKeypad; //only report valid decodings
+			break;
+		default:
+			status.keypad = 0;
+			break; 
+		
+	}
+}
+
+
+
+
 /**
  *  \brief Handler for System Tick interrupt.
  *
@@ -235,6 +361,55 @@ void SysTick_Handler(void)
 {
 	g_ul_tick_count++;
 	ul_ms_ticks++; //jsi 6feb16
+	
+	if (controls.buzzer_enable)
+	{
+		controls.buzzer_count++;
+		
+		if (controls.buzzer_cycle == CYCLE_ON)
+		{
+			if (controls.buzzer_count > BUZZER_ON_COUNT)
+			{
+				controls.buzzer_count = 0;
+				controls.buzzer_cycle = CYCLE_OFF;
+				pwm_channel_disable(PWM0, PIN_PWM_LED0_CHANNEL);
+			}
+		}
+		else
+		{
+			if (controls.buzzer_count > BUZZER_OFF_COUNT)
+			{
+				controls.buzzer_count = 0;
+				controls.buzzer_cycle = CYCLE_ON;
+				pwm_channel_enable(PWM0, PIN_PWM_LED0_CHANNEL);
+			}
+		}
+	}
+	
+	if (controls.solenoid_enable)
+	{
+		controls.solenoid_count++;
+		
+		if (controls.solenoid_cycle == CYCLE_ON)
+		{
+			if (controls.solenoid_count > SOLENOID_ON_COUNT)
+			{
+				controls.solenoid_count = 0;
+				controls.solenoid_cycle = CYCLE_OFF;
+				ioport_set_pin_level(ECLAVE_SOLENOID, IOPORT_PIN_LEVEL_LOW);
+			}
+		}
+		else
+		{
+			if (controls.solenoid_count > SOLENOID_OFF_COUNT)
+			{
+				controls.solenoid_count = 0;
+				controls.solenoid_cycle = CYCLE_ON;
+				ioport_set_pin_level(ECLAVE_SOLENOID, IOPORT_PIN_LEVEL_HIGH);
+			}
+			
+		}
+	}
 }
 
 /**
@@ -726,45 +901,6 @@ void init_pwm(void)
 
 #  define EXAMPLE_LED_GPIO    LED0_GPIO
 
-struct {
-
-	uint8_t psupply_onn;
-	uint8_t ledoen;
-	uint8_t MFP;
-	uint8_t buzzer;
-	uint8_t solenoid;
-
-}controls;
-
-struct {
-
-	uint8_t doorsw1;
-	uint8_t doorsw2;
-
-	uint8_t last_doorsw1;
-	uint8_t last_doorsw2;	
-
-	uint8_t col3;
-	uint8_t col2;
-	uint8_t col1;
-	uint8_t row3;
-	uint8_t row2;
-	uint8_t row1;
-		
-	uint8_t last_col3;
-	uint8_t last_col2;
-	uint8_t last_col1;
-	uint8_t last_row3;
-	uint8_t last_row2;
-	uint8_t last_row1;
-	
-}status;
-
-void toggle(uint8_t *var)
-{
-	*var  = (((*var)+1) & 1);
-}
-
 int main(void) //6feb16 this version of main has been hacked up for only exactly what we need
 {
 	char		txBuf[11] = {0,0,0,0,0,0,0,0,0,0,0}, rxByte;
@@ -781,8 +917,12 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 	controls.psupply_onn = 1;
 	controls.ledoen = 1;
 	controls.MFP = 0;
-	controls.buzzer	= 1;
-	controls.solenoid = 0;
+	controls.buzzer_enable	= 1;
+	controls.buzzer_count = 0;
+	controls.buzzer_cycle = CYCLE_OFF;
+	controls.solenoid_enable = 0;
+	controls.solenoid_count = 0;
+	controls.solenoid_cycle = CYCLE_OFF;
 	
 	status.doorsw1 = 0;
 	status.doorsw2 = 0;
@@ -919,14 +1059,8 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 				status.last_doorsw2 = status.doorsw2;	
 			}
 			
-			
-			status.col3 = ioport_get_pin_level(ECLAVE_COL3);
-			status.col2 = ioport_get_pin_level(ECLAVE_COL2);
-			status.col1 = ioport_get_pin_level(ECLAVE_COL1);
-			status.row3 = ioport_get_pin_level(ECLAVE_ROW3);
-			status.row2 = ioport_get_pin_level(ECLAVE_ROW2);
-			status.row1 = ioport_get_pin_level(ECLAVE_ROW1);
-			
+			scan_keypad();
+
 			if ((status.col3 != status.last_col3) ||
 			(status.col2 != status.last_col2) ||
 			(status.col1 != status.last_col1) ||
@@ -934,8 +1068,32 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 			(status.row2 != status.last_row2) ||
 			(status.row1 != status.last_row1))
 			{
-				sprintf(printStr,"ROW321: %d%d%d COL321 %d%d%d\r\n",
+				sprintf(printStr,"ROW321: %d%d%d COL321 %d%d%d ",
 						status.row3, status.row2, status.row1, status.col3, status.col2, status.col1);
+						
+				switch(status.keypad)
+				{
+					case KEYPAD_SW1:
+						strcat(printStr,"Keypad SW1");
+						break;
+					case KEYPAD_SW2:
+						strcat(printStr,"Keypad SW2");
+						break;
+					case KEYPAD_SW3:
+						strcat(printStr,"Keypad SW3");
+						break;
+					case KEYPAD_SW4:
+						strcat(printStr,"Keypad SW4");
+						break;
+					case KEYPAD_SW5:
+						strcat(printStr,"Keypad SW5");
+						break;
+					case KEYPAD_SW6:
+						strcat(printStr,"Keypad SW6");
+						break;
+				}
+				strcat(printStr,"\r\n");
+						
 				func_transmit(printStr, strlen(printStr));
 				
 				status.last_col1 = status.col1;	
@@ -944,6 +1102,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 				status.last_row1 = status.row1;	
 				status.last_row2 = status.row2;	
 				status.last_row3 = status.row3;	
+				
 			}
 		
 			if (usart_is_rx_ready(BOARD_USART)) {
@@ -957,7 +1116,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 						toggle(&controls.psupply_onn);
 						sprintf(printStr,"PSUPPLY_ONn: %d\r\n", controls.psupply_onn);
 						func_transmit(printStr, strlen(printStr));
-//jsi 16feb16 maybe we don't have enough juice to do this, this causes the board to reset						ioport_toggle_pin_level(ECLAVE_PSUPPLY_ONn);
+						ioport_toggle_pin_level(ECLAVE_PSUPPLY_ONn);
 						break;
 					case 'L':
 					case 'l':
@@ -975,11 +1134,14 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 						break;
 					case 'B':
 					case 'b':
-						toggle(&controls.buzzer);
-						sprintf(printStr,"Buzzer: %d\r\n", controls.buzzer);
+						toggle(&controls.buzzer_enable);
+						sprintf(printStr,"Buzzer: %d\r\n", controls.buzzer_enable);
 						func_transmit(printStr, strlen(printStr));
-						if (controls.buzzer)
+						
+						if (controls.buzzer_enable)
 						{
+							controls.buzzer_count = 0;
+							controls.buzzer_cycle = CYCLE_ON;
 							pwm_channel_enable(PWM0, PIN_PWM_LED0_CHANNEL);
 						}
 						else
@@ -989,10 +1151,20 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 						break;
 					case 'S':
 					case 's':
-						toggle(&controls.solenoid);
-						sprintf(printStr,"Solenoid: %d\r\n", controls.solenoid);
+						toggle(&controls.solenoid_enable);
+						sprintf(printStr,"Solenoid: %d\r\n", controls.solenoid_enable);
 						func_transmit(printStr, strlen(printStr));
-						ioport_toggle_pin_level(ECLAVE_SOLENOID);
+						
+						if (controls.solenoid_enable)
+						{
+							controls.solenoid_count = 0;
+							controls.solenoid_cycle = CYCLE_ON;
+							ioport_set_pin_level(ECLAVE_SOLENOID, IOPORT_PIN_LEVEL_HIGH);
+						}
+						else
+						{
+							ioport_set_pin_level(ECLAVE_SOLENOID, IOPORT_PIN_LEVEL_LOW);
+						}
 						break;
 					case 'H':
 					case 'h':
