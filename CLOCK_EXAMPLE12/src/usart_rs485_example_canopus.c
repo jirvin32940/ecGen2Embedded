@@ -396,6 +396,7 @@ void SysTick_Handler(void)
 			{
 				controls.solenoid_count = 0;
 				controls.solenoid_cycle = CYCLE_OFF;
+				controls.solenoid_enable = 0; //solenoid is a one-shot
 				ioport_set_pin_level(ECLAVE_SOLENOID, IOPORT_PIN_LEVEL_LOW);
 			}
 		}
@@ -1124,6 +1125,22 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 						sprintf(printStr,"LEDOEn: %d\r\n", controls.ledoen);
 						func_transmit(printStr, strlen(printStr));
 						ioport_toggle_pin_level(ECLAVE_LED_OEn);
+						
+						if (controls.ledoen == 0)
+						{
+							led_shelf(0, LED_ON);
+							led_shelf(1, LED_ON);
+							led_shelf(2, LED_ON);
+							led_shelf(3, LED_ON);
+						}
+						else
+						{
+							led_shelf(0, LED_OFF);
+							led_shelf(1, LED_OFF);
+							led_shelf(2, LED_OFF);
+							led_shelf(3, LED_OFF);
+						}
+						
 						break;
 					case 'M':
 					case 'm':
