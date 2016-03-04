@@ -515,7 +515,7 @@ static void configure_systick(void)
 
 	ul_flag = SysTick_Config(sysclk_get_cpu_hz()/SYS_TICK_FREQ);
 	if (ul_flag) {
-		puts("-F- Systick configuration error\r");
+		printf("-F- Systick configuration error\r"); //jsi 3mar16
 		while (1) {
 		}
 	}
@@ -999,17 +999,16 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 			
 			if (acc != idcsum)
 			{
-				func_transmit("Invalid serial ID checksum.\r\n", strlen("Invalid serial ID checksum.\r\n"));
+				printf("Invalid serial ID checksum.\r\n");
 			}
 			else
 			{
-				sprintf(printStr,"LED board %d serial ID: %x%x%x%x%x%x\r\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
-				func_transmit(printStr,strlen(printStr));
+				printf("LED board %d serial ID: %x%x%x%x%x%x\r\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
 			}
 		}
 		else
 		{
-			func_transmit("no board this slot\r\n", strlen("no board this slot\r\n"));
+			printf("no board this slot\r\n");
 			
 		}
 	}
@@ -1054,8 +1053,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 			if ((status.doorsw1 != status.last_doorsw1) ||
 				(status.doorsw2 != status.last_doorsw2))
 			{
-				sprintf(printStr,"doorsw1: %d doorsw2: %d\r\n", status.doorsw1, status.doorsw2);
-				func_transmit(printStr, strlen(printStr));
+				printf("doorsw1: %d doorsw2: %d\r\n", status.doorsw1, status.doorsw2);
 				status.last_doorsw1 = status.doorsw1;
 				status.last_doorsw2 = status.doorsw2;	
 			}
@@ -1095,7 +1093,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 				}
 				strcat(printStr,"\r\n");
 						
-				func_transmit(printStr, strlen(printStr));
+				printf(printStr);
 				
 				status.last_col1 = status.col1;	
 				status.last_col2 = status.col2;	
@@ -1106,24 +1104,22 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 				
 			}
 		
-			if (usart_is_rx_ready(BOARD_USART)) {
-				usart_read(BOARD_USART, (uint32_t *)&rxByte);
-				func_transmit(&rxByte, 1);
+			if (usart_is_rx_ready(CONF_UART)) {
+				usart_read(CONF_UART, (uint32_t *)&rxByte);
+				printf(&rxByte);
 				
 				switch(rxByte)
 				{
 					case 'P':
 					case 'p':
 						toggle(&controls.psupply_onn);
-						sprintf(printStr,"PSUPPLY_ONn: %d\r\n", controls.psupply_onn);
-						func_transmit(printStr, strlen(printStr));
+						printf("PSUPPLY_ONn: %d\r\n", controls.psupply_onn);
 						ioport_toggle_pin_level(ECLAVE_PSUPPLY_ONn);
 						break;
 					case 'L':
 					case 'l':
 						toggle(&controls.ledoen);
-						sprintf(printStr,"LEDOEn: %d\r\n", controls.ledoen);
-						func_transmit(printStr, strlen(printStr));
+						printf("LEDOEn: %d\r\n", controls.ledoen);
 						ioport_toggle_pin_level(ECLAVE_LED_OEn);
 						
 						if (controls.ledoen == 0)
@@ -1145,15 +1141,13 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 					case 'M':
 					case 'm':
 						toggle(&controls.MFP);
-						sprintf(printStr,"MFP: %d\r\n", controls.MFP);
-						func_transmit(printStr, strlen(printStr));
+						printf("MFP: %d\r\n", controls.MFP);
 						ioport_toggle_pin_level(ECLAVE_MFP);
 						break;
 					case 'B':
 					case 'b':
 						toggle(&controls.buzzer_enable);
-						sprintf(printStr,"Buzzer: %d\r\n", controls.buzzer_enable);
-						func_transmit(printStr, strlen(printStr));
+						printf("Buzzer: %d\r\n", controls.buzzer_enable);
 						
 						if (controls.buzzer_enable)
 						{
@@ -1169,8 +1163,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 					case 'S':
 					case 's':
 						toggle(&controls.solenoid_enable);
-						sprintf(printStr,"Solenoid: %d\r\n", controls.solenoid_enable);
-						func_transmit(printStr, strlen(printStr));
+						printf("Solenoid: %d\r\n", controls.solenoid_enable);
 						
 						if (controls.solenoid_enable)
 						{
@@ -1185,20 +1178,13 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 						break;
 					case 'H':
 					case 'h':
-						sprintf(printStr,"HELP MENU\r\n");
-						func_transmit(printStr, strlen(printStr));
-						sprintf(printStr,"P - Toggle PSUPPLY_ONn\r\n");
-						func_transmit(printStr, strlen(printStr));
-						sprintf(printStr,"L - Toggle LEDOEn\r\n");
-						func_transmit(printStr, strlen(printStr));
-						sprintf(printStr,"M - Toggle MFP\r\n");
-						func_transmit(printStr, strlen(printStr));
-						sprintf(printStr,"B - Toggle buzzer\r\n");
-						func_transmit(printStr, strlen(printStr));
-						sprintf(printStr,"S - Toggle solenoid\r\n");
-						func_transmit(printStr, strlen(printStr));
-						sprintf(printStr,"H - This menu\r\n");
-						func_transmit(printStr, strlen(printStr));
+						printf("HELP MENU\r\n");
+						printf("P - Toggle PSUPPLY_ONn\r\n");
+						printf("L - Toggle LEDOEn\r\n");
+						printf("M - Toggle MFP\r\n");
+						printf("B - Toggle buzzer\r\n");
+						printf("S - Toggle solenoid\r\n");
+						printf("H - This menu\r\n");
 						break;
 				}
 			}
@@ -1209,7 +1195,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 		{
 			unsigned char temp;
 			temp = (*(cmdPtrArray[displayState]+charCount));
-			putchar(temp);
+			func_transmit(&temp, 1);
 		}
 		
 		/* Test the debug port */
@@ -1245,7 +1231,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 				break;
 		}
 		
-		func_transmit(txBuf, strlen(txBuf));
+		printf(txBuf);
 
 
 		if ((++displayState) > 8)
@@ -1290,8 +1276,7 @@ int main(void) //6feb16 this version of main has been hacked up for only exactly
 			(g_ul_value[2] != g_ul_last_value[2]) ||
 			(g_ul_value[3] != g_ul_last_value[3]))
 		{
-			sprintf(printStr,"ch0: %x ch1: %x ch2: %x ch3: %x\r\n", g_ul_value[0], g_ul_value[1], g_ul_value[2], g_ul_value[3]);
-			func_transmit(printStr, strlen(printStr));
+			printf(printStr,"ch0: %x ch1: %x ch2: %x ch3: %x\r\n", g_ul_value[0], g_ul_value[1], g_ul_value[2], g_ul_value[3]);
 			g_ul_last_value[0] = g_ul_value[0];
 			g_ul_last_value[1] = g_ul_value[1];
 			g_ul_last_value[2] = g_ul_value[2];

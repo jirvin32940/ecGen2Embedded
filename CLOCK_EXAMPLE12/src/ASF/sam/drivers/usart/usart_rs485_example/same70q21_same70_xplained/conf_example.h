@@ -59,11 +59,11 @@
 #include "conf_board.h"
 #include "conf_clock.h"
 
-#define BOARD_ID_USART             ID_USART0
+#define BOARD_ID_USART             ID_UART0 //jsi 3mar16 was using this for the debug port, now using it for the display
 
-#define BOARD_USART                USART0
+#define BOARD_USART                UART0 //jsi 3mar16
 
-#define BOARD_USART_BAUDRATE       115200 //was 256000 jsi 7feb16
+#define BOARD_USART_BAUDRATE       2400 //3mar16
 
 #define USART_Handler              USART0_Handler
 

@@ -50,7 +50,7 @@
 /** UART Interface */
 #define CONF_UART            CONSOLE_UART
 /** Baudrate setting */
-#define CONF_UART_BAUDRATE   (2400UL)//jsi 6feb16 was 115200, but we are using this for a scrolling display now
+#define CONF_UART_BAUDRATE   (115200UL)//jsi 3mar16 debug port baud rate
 /** Character length setting */
 #define CONF_UART_CHAR_LENGTH  US_MR_CHRL_8_BIT
 /** Parity setting */

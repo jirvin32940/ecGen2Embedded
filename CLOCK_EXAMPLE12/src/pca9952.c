@@ -185,10 +185,7 @@ void PCA9952_init(void) //7apr15
 	tmp3 = PCA9952_read_reg(LED_BOTTOM, PCA9952_EFLAG0);	//TODO: just see what we get, will need to weave error checking into this system later
 	tmp4 = PCA9952_read_reg(LED_BOTTOM, PCA9952_EFLAG1);
 	
-	sprintf(printStr,"PCA9952: tmp1: %x tmp2: %x tmp3: %x tmp4: %x\r\n", tmp1, tmp2, tmp3, tmp4); //10feb16 just for debug jsi
-	func_transmit(printStr, strlen(printStr));
-	
-	
+	printf(printStr,"PCA9952: tmp1: %x tmp2: %x tmp3: %x tmp4: %x\r\n", tmp1, tmp2, tmp3, tmp4); //10feb16 just for debug jsi
 }
 
 

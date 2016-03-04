@@ -92,8 +92,8 @@
 
 /*----------------------------------------------------------------------------*/
 
-#define CONSOLE_UART               UART0	//jsi 6feb16 was USART1
-#define CONSOLE_UART_ID            ID_UART0 //jsi 6feb16 was ID_USART1
+#define CONSOLE_UART               USART0	//jsi 3mar16 was using this for the display, now using it for the debug port/stdio
+#define CONSOLE_UART_ID            ID_USART0 //jsi 3mar16
 /** USART1 pins definitions, PA21,PB4. */
 #define USART1_RXD_GPIO   PIO_PA21_IDX
 #define USART1_RXD_FLAGS  IOPORT_MODE_MUX_A
